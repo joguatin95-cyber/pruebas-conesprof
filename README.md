@@ -228,7 +228,7 @@ Abra <http://127.0.0.1:5000> e ingrese con el usuario administrador creado por `
 Para produccion, sirva con gunicorn (Linux) o waitress (Windows):
 
 ```bash
-gunicorn -w 4 -b 0.0.0.0:8000 "app:create_app()"
+gunicorn wsgi:app -w 4 -b 0.0.0.0:8000
 ```
 
 ## Publicar la aplicacion en internet (Render)
@@ -262,7 +262,7 @@ Render lee `render.yaml` y toma la configuracion sola. Si prefiere hacerlo a man
 | Region | **Oregon** (la misma de la base de datos) |
 | Runtime | Python 3 |
 | Build Command | `pip install -r requirements.txt` |
-| Start Command | `gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --workers 2 --timeout 60` |
+| Start Command | `gunicorn wsgi:app --bind 0.0.0.0:$PORT --workers 2 --timeout 60` |
 
 ### 3. Configurar las variables de entorno
 
