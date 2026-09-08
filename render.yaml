@@ -1,0 +1,33 @@
+# Configuracion de despliegue en Render (Blueprint).
+#
+# La base de datos NO se declara aqui a proposito: ya existe ("conesprof") y no debe
+# recrearse. La cadena de conexion se define a mano como variable de entorno.
+#
+# La region debe ser la misma de la base de datos (Oregon), porque solo asi el
+# servicio web puede usar la Internal Database URL, que es mas rapida y no sale a
+# internet.
+
+services:
+  - type: web
+    name: gestion-procesos
+    runtime: python
+    plan: free
+    region: oregon
+
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --workers 2 --timeout 60
+
+    healthCheckPath: /login
+
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.4
+
+      # Render genera una clave aleatoria y la guarda cifrada.
+      - key: SECRET_KEY
+        generateValue: true
+
+      # sync: false significa que Render la pedira al desplegar y no se guarda
+      # en este archivo. Pegue aqui la INTERNAL Database URL de "conesprof".
+      - key: DATABASE_URL
+        sync: false

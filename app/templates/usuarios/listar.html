@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titulo %}Usuarios{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <h1>Usuarios <span class="conteo">{{ usuarios|length }} registrado(s)</span></h1>
+  <a class="boton" href="{{ url_for('usuarios.crear') }}">+ Nuevo usuario</a>
+</div>
+
+<div class="tabla-scroll">
+  <table class="tabla">
+    <thead>
+      <tr><th>ID</th><th>USUARIO</th><th>NOMBRE</th><th>CORREO</th><th>ROL</th><th>CLIENTE ASIGNADO</th><th>ESTADO</th><th class="col-acciones">ACCIONES</th></tr>
+    </thead>
+    <tbody>
+      {% for u in usuarios %}
+      <tr>
+        <td>{{ u.id }}</td>
+        <td>{{ u.username }}</td>
+        <td>{{ u.nombre }}</td>
+        <td>{{ u.email or '' }}</td>
+        <td><span class="chip chip-{{ u.rol|lower }}">{{ u.rol }}</span></td>
+        <td>
+          {% if u.sin_cliente_asignado %}
+            <span class="aviso-mini">sin asignar</span>
+          {% else %}{{ u.cliente_asignado or '' }}{% endif %}
+        </td>
+        <td>{{ 'Activo' if u.activo else 'Inactivo' }}</td>
+        <td class="col-acciones">
+          <a class="mini-boton" href="{{ url_for('usuarios.editar', usuario_id=u.id) }}">Editar</a>
+          {% if u.id != current_user.id %}
+          <form method="post" action="{{ url_for('usuarios.eliminar', usuario_id=u.id) }}"
+                onsubmit="return confirm('Eliminar al usuario {{ u.username }}?');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="mini-boton peligro" type="submit">Eliminar</button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

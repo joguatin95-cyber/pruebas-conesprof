@@ -1,0 +1,17 @@
+# Entorno virtual
+.venv/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# NUNCA subir credenciales ni bases locales
+.env
+*.db
+instance/
+
+# Informes generados por la importacion
+*_rechazadas.csv
+
+.DS_Store

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block titulo %}Ingresar{% endblock %}
+{% block contenido %}
+<div class="login-caja">
+  <h1>Gestion de Procesos</h1>
+  <p class="sub">Ingrese sus credenciales para continuar</p>
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <label>{{ form.username.label }}</label>
+    {{ form.username(autofocus=true, placeholder="usuario") }}
+    {% for e in form.username.errors %}<span class="error">{{ e }}</span>{% endfor %}
+
+    <label>{{ form.password.label }}</label>
+    {{ form.password(placeholder="********") }}
+    {% for e in form.password.errors %}<span class="error">{{ e }}</span>{% endfor %}
+
+    <label class="check">{{ form.recordarme() }} Recordarme</label>
+    {{ form.submit(class="boton ancho") }}
+  </form>
+</div>
+{% endblock %}

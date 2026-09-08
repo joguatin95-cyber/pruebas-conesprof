@@ -1,0 +1,14 @@
+{# Lista de campos modificados de un movimiento del historico. Espera la variable 'a'. #}
+{% if a.cambios %}
+  <ul class="cambios">
+    {% for campo, antes, despues in a.cambios %}
+      <li>
+        <b>{{ etiquetas.get(campo, campo) }}:</b>
+        {% if antes %}<span class="antes">{{ antes }}</span> &rarr; {% endif %}
+        <span class="despues">{{ despues if despues else '(vacio)' }}</span>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <span class="suave">-</span>
+{% endif %}

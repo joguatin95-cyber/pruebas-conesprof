@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block titulo %}Historico de cambios{% endblock %}
+{% block contenido %}
+
+<div class="encabezado">
+  <h1>Historico de cambios <span class="conteo">{{ paginacion.total }} movimiento(s)</span></h1>
+</div>
+
+<form class="filtros" method="get" action="{{ url_for('auditoria.listar') }}">
+  <input type="text" name="q" value="{{ filtros.get('q', '') }}"
+         placeholder="Buscar por usuario, registro o valor...">
+  <select name="accion">
+    <option value="">Todas las acciones</option>
+    {% for a in acciones %}
+      <option value="{{ a }}" {% if filtros.get('accion') == a %}selected{% endif %}>{{ a }}</option>
+    {% endfor %}
+  </select>
+  <select name="entidad">
+    <option value="">Todo el sistema</option>
+    {% for e in entidades %}
+      <option value="{{ e }}" {% if filtros.get('entidad') == e %}selected{% endif %}>{{ e }}</option>
+    {% endfor %}
+  </select>
+  <label class="mini">Desde <input type="date" name="desde" value="{{ filtros.get('desde', '') }}"></label>
+  <label class="mini">Hasta <input type="date" name="hasta" value="{{ filtros.get('hasta', '') }}"></label>
+  <button class="boton" type="submit">Filtrar</button>
+  <a class="boton secundario" href="{{ url_for('auditoria.listar') }}">Limpiar</a>
+</form>
+
+{% if filtros.get('registro') %}
+<p class="nota">Mostrando solo el historico del registro #{{ filtros.get('registro') }}.</p>
+{% endif %}
+
+<div class="tabla-scroll">
+  <table class="tabla">
+    <thead>
+      <tr><th>FECHA</th><th>USUARIO</th><th>ACCION</th><th>ENTIDAD</th><th>REGISTRO</th><th>DETALLE</th></tr>
+    </thead>
+    <tbody>
+      {% for a in paginacion.items %}
+      <tr>
+        <td>{{ a.fecha.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ a.usuario_username }}</td>
+        <td><span class="accion accion-{{ a.accion|lower }}">{{ a.accion }}</span></td>
+        <td>{{ a.entidad }}</td>
+        <td>#{{ a.entidad_id }} {{ a.descripcion }}</td>
+        <td class="detalle">{% include "auditoria/_cambios.html" %}</td>
+      </tr>
+      {% else %}
+      <tr><td class="vacio" colspan="6">No hay movimientos registrados.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if paginacion.pages > 1 %}
+<div class="paginacion">
+  {% if paginacion.has_prev %}
+    <a href="{{ url_for('auditoria.listar', pagina=paginacion.prev_num, **filtros) }}">&laquo; Anterior</a>
+  {% endif %}
+  <span>Pagina {{ paginacion.page }} de {{ paginacion.pages }}</span>
+  {% if paginacion.has_next %}
+    <a href="{{ url_for('auditoria.listar', pagina=paginacion.next_num, **filtros) }}">Siguiente &raquo;</a>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block titulo %}{{ titulo }}{% endblock %}
+{% block contenido %}
+<div class="tarjeta">
+  <h1>{{ titulo }}</h1>
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <div class="grid-form">
+      {% for campo in [form.fecha_inicio, form.cliente, form.subcliente, form.tipo_proceso,
+                       form.ciudad, form.cedula, form.nombre, form.cargo,
+                       form.fecha_finalizacion, form.estado, form.factura, form.orden_compra] %}
+        <div class="campo">
+          <label>{{ campo.label }}</label>
+          {{ campo() }}
+          {% for e in campo.errors %}<span class="error">{{ e }}</span>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    <div class="acciones-form">
+      {{ form.submit(class="boton") }}
+      <a class="boton secundario" href="{{ url_for('procesos.listar') }}">Cancelar</a>
+    </div>
+  </form>
+</div>
+
+{% if historial %}
+<div class="tarjeta" style="margin-top:18px">
+  <h2 class="titulo-seccion">Historico de este registro</h2>
+  <table class="tabla tabla-simple">
+    <thead><tr><th>FECHA</th><th>USUARIO</th><th>ACCION</th><th>CAMBIOS</th></tr></thead>
+    <tbody>
+      {% for a in historial %}
+      <tr>
+        <td>{{ a.fecha.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td>{{ a.usuario_username }}</td>
+        <td><span class="accion accion-{{ a.accion|lower }}">{{ a.accion }}</span></td>
+        <td class="detalle">{% include "auditoria/_cambios.html" %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

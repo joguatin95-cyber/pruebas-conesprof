@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}Gestion de Procesos{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+{% if current_user.is_authenticated %}
+<header class="barra">
+  <div class="marca">Gestion de Procesos</div>
+  <nav>
+    <a href="{{ url_for('procesos.listar') }}">Procesos</a>
+    {% if current_user.es_administrador %}
+      <a href="{{ url_for('usuarios.listar') }}">Usuarios</a>
+      <a href="{{ url_for('auditoria.listar') }}">Historico</a>
+    {% endif %}
+  </nav>
+  <div class="sesion">
+    <span class="usuario">{{ current_user.nombre }}</span>
+    <span class="chip chip-{{ current_user.rol|lower }}">{{ current_user.rol }}</span>
+    {% if current_user.limitado_por_cliente and current_user.cliente_asignado %}
+      <span class="chip chip-alcance">{{ current_user.cliente_asignado }}</span>
+    {% endif %}
+    <a class="salir" href="{{ url_for('auth.logout') }}">Salir</a>
+  </div>
+</header>
+{% endif %}
+
+<main class="contenido">
+  {% with mensajes = get_flashed_messages(with_categories=true) %}
+    {% if mensajes %}
+      <div class="alertas">
+        {% for categoria, mensaje in mensajes %}
+          <div class="alerta alerta-{{ categoria }}">{{ mensaje }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+  {% block contenido %}{% endblock %}
+</main>
+</body>
+</html>
