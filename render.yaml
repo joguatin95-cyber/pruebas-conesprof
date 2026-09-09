@@ -9,7 +9,7 @@
 
 services:
   - type: web
-    name: gestion-procesos
+    name: conesprof-aplicacion
     runtime: python
     plan: free
     region: oregon
