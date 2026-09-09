@@ -102,3 +102,31 @@ input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
 .chip-alcance{background:#e0e7ff;color:#3730a3}
 .aviso{background:#fef3c7;border:1px solid #fcd34d;color:#78350f;padding:10px 14px;border-radius:6px}
 .aviso-mini{color:#b45309;font-size:12px;font-style:italic}
+
+/* Avatares */
+.avatar{width:30px;height:30px;border-radius:50%;object-fit:cover;display:inline-flex;
+  align-items:center;justify-content:center;vertical-align:middle;background:#c7d2fe}
+.avatar-iniciales{font-size:11px;font-weight:700;color:#312e81;letter-spacing:.5px}
+.avatar-mini{width:26px;height:26px}
+.avatar-enlace{display:inline-flex;border:2px solid rgba(255,255,255,.5);border-radius:50%;
+  padding:1px;line-height:0}
+.avatar-enlace:hover{border-color:#fff}
+.barra .usuario{color:#e5e7eb;text-decoration:none}
+.barra .usuario:hover{color:#fff;text-decoration:underline}
+.avatar-grande{width:110px;height:110px;border-radius:50%;object-fit:cover;
+  display:inline-flex;align-items:center;justify-content:center;background:#c7d2fe;
+  font-size:34px;font-weight:700;color:#312e81;flex-shrink:0}
+
+/* Panel de perfil */
+.perfil-columnas{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:18px;
+  align-items:start}
+.perfil-columnas .tarjeta{max-width:none}
+.perfil-foto{display:flex;gap:18px;align-items:center;margin-bottom:20px}
+.perfil-nombre{margin:0 0 4px;font-size:17px;font-weight:600}
+.perfil-datos p{margin:0 0 6px}
+.perfil-form{border-top:1px solid var(--borde);padding-top:16px;margin-top:4px}
+.perfil-form input[type=file]{padding:7px;background:#fff}
+
+/* Contrasena temporal: debe resaltar y poder copiarse */
+.alerta-clave{background:#111827;border-color:#111827;color:#fff;font-family:Consolas,
+  "Courier New",monospace;font-size:15px;letter-spacing:.6px;user-select:all}

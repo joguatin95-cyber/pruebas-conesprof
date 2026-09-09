@@ -148,6 +148,41 @@ python migrate.py
 Agrega la columna `usuarios.cliente_asignado` y la tabla `auditoria` si faltan.
 Es idempotente y funciona tanto en PostgreSQL como en SQLite.
 
+## Mi perfil
+
+Todos los usuarios —incluidos CONTADOR y CLIENTE— tienen un panel propio en
+**Mi perfil** (menu superior) donde pueden:
+
+- **Cambiar su contrasena.** Se exige la contrasena actual, minimo 8 caracteres, y no
+  se admite repetir la que ya tenian.
+- **Subir o quitar su foto.** Se recorta al centro, se reduce a 320x320 y se vuelve a
+  codificar como JPEG con Pillow. Esa reconversion descarta los metadatos (incluida la
+  ubicacion GPS que traen muchas fotos de celular) y garantiza que lo guardado sea
+  realmente una imagen. Maximo 5 MB de archivo original.
+
+Es la unica parte donde CONTADOR y CLIENTE pueden escribir, y siempre sobre su propia
+cuenta: la ruta no recibe ningun identificador de usuario, se toma de la sesion. Sus
+permisos sobre los procesos no cambian.
+
+**Las fotos se guardan en la base de datos, no en disco.** El almacenamiento de Render es
+efimero: cualquier archivo escrito en el disco desaparece en el siguiente despliegue.
+
+## Contrasenas: por que no se pueden ver
+
+En la base **no existe ninguna contrasena**. Solo se guarda un hash (scrypt), que es una
+huella irreversible: sirve para comprobar si una clave es correcta, pero de ella no se
+puede reconstruir el texto original. Ni el administrador, ni quien tenga acceso directo a
+la base, pueden leer la contrasena de un usuario. Es intencional: si la base se filtrara,
+las contrasenas seguirian protegidas.
+
+Cuando un usuario pierde su contrasena, el administrador usa **Restablecer clave** en el
+listado de usuarios. La aplicacion genera una contrasena temporal de 12 caracteres, la
+muestra **una sola vez** en pantalla para que se la entregue al usuario, e invalida la
+anterior. El alfabeto excluye los caracteres que se confunden al dictarla (O, 0, l, 1, I).
+
+En el historico de cambios queda constancia de que la contrasena cambio y de quien lo
+hizo, pero **nunca el valor**.
+
 ## Importacion masiva desde Excel o CSV
 
 ```bash
@@ -312,11 +347,13 @@ app/
   forms.py          Formularios con validacion (WTForms)
   security.py       Decorador @solo_administrador
   auditoria.py      Utilidades del historico (instantaneas y comparacion de cambios)
+  imagenes.py       Validacion y reduccion de las fotos de perfil
   routes/
     auth.py         Login y logout
     procesos.py     Listado, filtros, CSV y CRUD de procesos
     usuarios.py     CRUD de usuarios (solo administrador)
     auditoria.py    Consulta del historico de cambios
+    perfil.py       Panel personal: foto y cambio de contrasena propia
   templates/        Plantillas Jinja2
   static/css/       Hoja de estilos
 sql/                Scripts de PostgreSQL

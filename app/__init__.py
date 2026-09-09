@@ -26,13 +26,20 @@ def create_app(config_class=Config):
 
     from app.routes.auditoria import bp as auditoria_bp
     from app.routes.auth import bp as auth_bp
+    from app.routes.perfil import bp as perfil_bp
     from app.routes.procesos import bp as procesos_bp
     from app.routes.usuarios import bp as usuarios_bp
 
     app.register_blueprint(auditoria_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(perfil_bp)
     app.register_blueprint(procesos_bp)
     app.register_blueprint(usuarios_bp)
+
+    @app.errorhandler(413)
+    def archivo_muy_grande(error):
+        return render_template("error.html", codigo=413,
+                               mensaje="El archivo es demasiado grande (maximo 5 MB)."), 413
 
     @app.errorhandler(403)
     def sin_permisos(error):

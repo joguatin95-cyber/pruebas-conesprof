@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
     BooleanField,
     DateField,
@@ -73,3 +74,30 @@ class UsuarioEditarForm(FlaskForm):
         validators=[EqualTo("password", message="Las contrasenas no coinciden.")],
     )
     submit = SubmitField("Guardar cambios")
+
+
+class CambiarPasswordForm(FlaskForm):
+    """Cambio de la propia contrasena. Exige la actual para evitar que alguien
+    con la sesion abierta ajena se apodere de la cuenta."""
+
+    password_actual = PasswordField("Contrasena actual", validators=[DataRequired()])
+    password = PasswordField(
+        "Nueva contrasena",
+        validators=[DataRequired(), Length(min=8, message="Minimo 8 caracteres.")],
+    )
+    password2 = PasswordField(
+        "Confirmar nueva contrasena",
+        validators=[DataRequired(), EqualTo("password", message="Las contrasenas no coinciden.")],
+    )
+    submit = SubmitField("Cambiar contrasena")
+
+
+class FotoForm(FlaskForm):
+    foto = FileField(
+        "Imagen",
+        validators=[
+            FileAllowed(["jpg", "jpeg", "png", "webp", "gif", "bmp"],
+                        "Solo se admiten imagenes JPG, PNG, WEBP, GIF o BMP.")
+        ],
+    )
+    submit = SubmitField("Guardar foto")

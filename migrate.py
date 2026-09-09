@@ -3,6 +3,7 @@
 Agrega, si faltan:
   - la columna usuarios.cliente_asignado
   - la tabla auditoria (historico de cambios)
+  - las columnas de la foto de perfil (usuarios.foto, foto_mime, foto_actualizada_en)
 
 Es idempotente: puede ejecutarse varias veces sin efecto adicional.
 Funciona con PostgreSQL y con SQLite.
@@ -27,14 +28,24 @@ def main():
             return
 
         columnas = {c["name"] for c in inspector.get_columns("usuarios")}
-        if "cliente_asignado" in columnas:
-            print("usuarios.cliente_asignado ya existe.")
-        else:
-            with db.engine.begin() as conexion:
-                conexion.execute(
-                    text("ALTER TABLE usuarios ADD COLUMN cliente_asignado VARCHAR(120)")
-                )
-            print("Columna usuarios.cliente_asignado agregada.")
+
+        # Tipo binario segun el motor: PostgreSQL usa BYTEA, SQLite BLOB.
+        binario = "BYTEA" if db.engine.dialect.name == "postgresql" else "BLOB"
+        nuevas = [
+            ("cliente_asignado", "VARCHAR(120)"),
+            ("foto", binario),
+            ("foto_mime", "VARCHAR(30)"),
+            ("foto_actualizada_en", "TIMESTAMP"),
+        ]
+        for nombre, tipo in nuevas:
+            if nombre in columnas:
+                print("usuarios.%s ya existe." % nombre)
+            else:
+                with db.engine.begin() as conexion:
+                    conexion.execute(
+                        text("ALTER TABLE usuarios ADD COLUMN %s %s" % (nombre, tipo))
+                    )
+                print("Columna usuarios.%s agregada." % nombre)
 
         if "auditoria" in tablas:
             print("La tabla auditoria ya existe.")

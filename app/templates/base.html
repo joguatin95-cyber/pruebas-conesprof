@@ -16,9 +16,17 @@
       <a href="{{ url_for('usuarios.listar') }}">Usuarios</a>
       <a href="{{ url_for('auditoria.listar') }}">Historico</a>
     {% endif %}
+    <a href="{{ url_for('perfil.ver') }}">Mi perfil</a>
   </nav>
   <div class="sesion">
-    <span class="usuario">{{ current_user.nombre }}</span>
+    <a class="avatar-enlace" href="{{ url_for('perfil.ver') }}" title="Mi perfil">
+      {% if current_user.tiene_foto %}
+        <img class="avatar" src="{{ url_for('perfil.foto', usuario_id=current_user.id) }}?v={{ current_user.foto_actualizada_en.timestamp()|int if current_user.foto_actualizada_en else 0 }}" alt="">
+      {% else %}
+        <span class="avatar avatar-iniciales">{{ current_user.iniciales }}</span>
+      {% endif %}
+    </a>
+    <a class="usuario" href="{{ url_for('perfil.ver') }}">{{ current_user.nombre }}</a>
     <span class="chip chip-{{ current_user.rol|lower }}">{{ current_user.rol }}</span>
     {% if current_user.limitado_por_cliente and current_user.cliente_asignado %}
       <span class="chip chip-alcance">{{ current_user.cliente_asignado }}</span>

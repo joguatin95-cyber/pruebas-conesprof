@@ -1,3 +1,6 @@
+import secrets
+import string
+
 from flask import Blueprint, flash, redirect, render_template, url_for
 from flask_login import current_user, login_required
 from sqlalchemy import select, update
@@ -175,4 +178,37 @@ def eliminar(usuario_id):
     db.session.delete(usuario)
     db.session.commit()
     flash(f"Usuario '{usuario.username}' eliminado.", "info")
+    return redirect(url_for("usuarios.listar"))
+
+
+# Alfabeto sin caracteres que se confunden al dictar una clave (O/0, l/1, I).
+ALFABETO = "".join(c for c in string.ascii_letters + string.digits if c not in "O0l1I")
+
+
+@bp.route("/<int:usuario_id>/restablecer", methods=["POST"])
+@login_required
+@solo_administrador
+def restablecer(usuario_id):
+    """Genera una contrasena temporal y se la muestra al administrador una sola vez.
+
+    Las contrasenas guardadas no se pueden leer (son hashes irreversibles), asi que
+    esta es la forma de ayudar a un usuario que perdio la suya.
+    """
+    usuario = db.get_or_404(Usuario, usuario_id)
+    temporal = "".join(secrets.choice(ALFABETO) for _ in range(12))
+    usuario.set_password(temporal)
+
+    registrar(
+        "EDITAR", "USUARIO", usuario.id,
+        descripcion=f"{usuario.username} ({usuario.rol})",
+        # Se registra el hecho, nunca el valor.
+        detalle={"contrasena": ["", "(restablecida por el administrador)"]},
+    )
+    db.session.commit()
+
+    flash(
+        f"Contrasena temporal de '{usuario.username}': {temporal}", "clave")
+    flash(
+        "Anotela ahora: no se vuelve a mostrar. Entreguesela al usuario y pidale "
+        "que la cambie desde Mi perfil.", "warning")
     return redirect(url_for("usuarios.listar"))

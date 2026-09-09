@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block titulo %}Mi perfil{% endblock %}
+{% block contenido %}
+
+<div class="encabezado">
+  <h1>Mi perfil</h1>
+</div>
+
+<div class="perfil-columnas">
+
+  <div class="tarjeta">
+    <h2 class="titulo-seccion">Foto de perfil</h2>
+
+    <div class="perfil-foto">
+      {% if current_user.tiene_foto %}
+        <img class="avatar-grande"
+             src="{{ url_for('perfil.foto', usuario_id=current_user.id) }}?v={{ current_user.foto_actualizada_en.timestamp()|int if current_user.foto_actualizada_en else 0 }}"
+             alt="Foto de {{ current_user.nombre }}">
+      {% else %}
+        <div class="avatar-grande avatar-iniciales">{{ current_user.iniciales }}</div>
+      {% endif %}
+
+      <div class="perfil-datos">
+        <p class="perfil-nombre">{{ current_user.nombre }}</p>
+        <p class="suave">{{ current_user.username }}
+          {% if current_user.email %}&middot; {{ current_user.email }}{% endif %}</p>
+        <span class="chip chip-{{ current_user.rol|lower }}">{{ current_user.rol }}</span>
+        {% if current_user.limitado_por_cliente and current_user.cliente_asignado %}
+          <span class="chip chip-alcance">{{ current_user.cliente_asignado }}</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <form method="post" action="{{ url_for('perfil.cambiar_foto') }}"
+          enctype="multipart/form-data" class="perfil-form">
+      {{ form_foto.hidden_tag() }}
+      <div class="campo">
+        <label>{{ form_foto.foto.label }}</label>
+        {{ form_foto.foto(accept="image/*") }}
+        {% for e in form_foto.foto.errors %}<span class="error">{{ e }}</span>{% endfor %}
+      </div>
+      <p class="nota">Se recorta al centro y se guarda a 320x320. Maximo 5 MB.</p>
+      <div class="acciones-form">
+        {{ form_foto.submit(class="boton") }}
+      </div>
+    </form>
+
+    {% if current_user.tiene_foto %}
+    <form method="post" action="{{ url_for('perfil.eliminar_foto') }}"
+          onsubmit="return confirm('Eliminar su foto de perfil?');">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="mini-boton peligro" type="submit">Eliminar foto</button>
+    </form>
+    {% endif %}
+  </div>
+
+  <div class="tarjeta">
+    <h2 class="titulo-seccion">Cambiar contrasena</h2>
+    <form method="post" action="{{ url_for('perfil.cambiar_password') }}">
+      {{ form_password.hidden_tag() }}
+      {% for campo in [form_password.password_actual, form_password.password,
+                       form_password.password2] %}
+        <div class="campo">
+          <label>{{ campo.label }}</label>
+          {{ campo() }}
+          {% for e in campo.errors %}<span class="error">{{ e }}</span>{% endfor %}
+        </div>
+      {% endfor %}
+      <p class="nota">Minimo 8 caracteres. Se le pide la actual para confirmar que es usted.</p>
+      <div class="acciones-form">
+        {{ form_password.submit(class="boton") }}
+      </div>
+    </form>
+  </div>
+
+</div>
+{% endblock %}

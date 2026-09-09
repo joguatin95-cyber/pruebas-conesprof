@@ -35,6 +35,12 @@ class Usuario(UserMixin, db.Model):
     activo = db.Column(db.Boolean, nullable=False, default=True)
     creado_en = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
+    # La foto se guarda en la base y no en disco: el almacenamiento de Render es
+    # efimero y se borraria en cada despliegue.
+    foto = db.Column(db.LargeBinary, nullable=True)
+    foto_mime = db.Column(db.String(30), nullable=True)
+    foto_actualizada_en = db.Column(db.DateTime, nullable=True)
+
     def set_password(self, password: str) -> None:
         self.password_hash = generate_password_hash(password)
 
@@ -44,6 +50,20 @@ class Usuario(UserMixin, db.Model):
     @property
     def es_administrador(self) -> bool:
         return self.rol == ROL_ADMINISTRADOR
+
+    @property
+    def tiene_foto(self) -> bool:
+        return bool(self.foto)
+
+    @property
+    def iniciales(self) -> str:
+        """Iniciales para mostrar cuando el usuario no tiene foto."""
+        partes = [p for p in (self.nombre or self.username).split() if p]
+        if not partes:
+            return "?"
+        if len(partes) == 1:
+            return partes[0][:2].upper()
+        return (partes[0][0] + partes[1][0]).upper()
 
     @property
     def limitado_por_cliente(self) -> bool:

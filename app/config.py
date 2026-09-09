@@ -78,6 +78,9 @@ class Config:
         ),
     }
 
+    # Tamano maximo de una subida (fotos de perfil). Flask responde 413 si se excede.
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024
+
     # Cantidad de registros por pagina en la pantalla principal.
     ITEMS_POR_PAGINA = int(os.getenv("ITEMS_POR_PAGINA", "25"))
 

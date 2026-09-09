@@ -9,12 +9,19 @@
 <div class="tabla-scroll">
   <table class="tabla">
     <thead>
-      <tr><th>ID</th><th>USUARIO</th><th>NOMBRE</th><th>CORREO</th><th>ROL</th><th>CLIENTE ASIGNADO</th><th>ESTADO</th><th class="col-acciones">ACCIONES</th></tr>
+      <tr><th>ID</th><th></th><th>USUARIO</th><th>NOMBRE</th><th>CORREO</th><th>ROL</th><th>CLIENTE ASIGNADO</th><th>ESTADO</th><th class="col-acciones">ACCIONES</th></tr>
     </thead>
     <tbody>
       {% for u in usuarios %}
       <tr>
         <td>{{ u.id }}</td>
+        <td>
+          {% if u.tiene_foto %}
+            <img class="avatar avatar-mini" src="{{ url_for('perfil.foto', usuario_id=u.id) }}" alt="">
+          {% else %}
+            <span class="avatar avatar-mini avatar-iniciales">{{ u.iniciales }}</span>
+          {% endif %}
+        </td>
         <td>{{ u.username }}</td>
         <td>{{ u.nombre }}</td>
         <td>{{ u.email or '' }}</td>
@@ -27,6 +34,11 @@
         <td>{{ 'Activo' if u.activo else 'Inactivo' }}</td>
         <td class="col-acciones">
           <a class="mini-boton" href="{{ url_for('usuarios.editar', usuario_id=u.id) }}">Editar</a>
+          <form method="post" action="{{ url_for('usuarios.restablecer', usuario_id=u.id) }}"
+                onsubmit="return confirm('Generar una contrasena temporal para {{ u.username }}? La actual dejara de servir.');">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="mini-boton" type="submit">Restablecer clave</button>
+          </form>
           {% if u.id != current_user.id %}
           <form method="post" action="{{ url_for('usuarios.eliminar', usuario_id=u.id) }}"
                 onsubmit="return confirm('Eliminar al usuario {{ u.username }}?');">
@@ -40,4 +52,7 @@
     </tbody>
   </table>
 </div>
+<p class="nota">Las contrasenas se guardan cifradas de forma irreversible, por eso no
+pueden mostrarse. Si un usuario pierde la suya, use <b>Restablecer clave</b>: se genera una
+temporal que se muestra una sola vez para que se la entregue.</p>
 {% endblock %}

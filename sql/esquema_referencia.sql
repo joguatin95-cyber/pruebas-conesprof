@@ -59,3 +59,9 @@ CREATE INDEX ix_auditoria_entidad_id ON auditoria (entidad_id);
 
 -- Alcance por cliente del rol CLIENTE (agregado posteriormente).
 ALTER TABLE usuarios ADD COLUMN cliente_asignado VARCHAR(120);
+
+-- Foto de perfil (agregado posteriormente). Se guarda en la base y no en disco
+-- porque el almacenamiento de Render es efimero.
+ALTER TABLE usuarios ADD COLUMN foto BYTEA;
+ALTER TABLE usuarios ADD COLUMN foto_mime VARCHAR(30);
+ALTER TABLE usuarios ADD COLUMN foto_actualizada_en TIMESTAMP;
