@@ -23,10 +23,18 @@
       {{ form.hoja(placeholder="por omision se usa la primera hoja") }}
     </div>
 
-    <div class="campo">
+    <details class="avanzadas">
+      <summary>Opciones avanzadas <span class="suave">(normalmente no hace falta tocarlas)</span></summary>
+
       <label class="check">{{ form.conservar_id() }} {{ form.conservar_id.label.text }}</label>
+      <p class="nota aviso">Deje esta casilla <b>desmarcada</b> salvo que este trasladando
+      datos desde otro sistema y necesite conservar sus numeros. Si la marca y algun ID
+      del archivo ya existe en la base, esas filas se rechazan.</p>
+
       <label class="check">{{ form.permitir_duplicados() }} {{ form.permitir_duplicados.label.text }}</label>
-    </div>
+      <p class="nota">Con esta marcada se cargan tambien los registros que ya existen,
+      por lo que puede quedar informacion repetida.</p>
+    </details>
 
     <div class="alerta alerta-info" style="margin-top:16px">
       Al continuar <b>no se guarda nada todavia</b>: primero se revisa el archivo

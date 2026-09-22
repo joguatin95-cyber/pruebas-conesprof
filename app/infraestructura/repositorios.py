@@ -33,6 +33,9 @@ class RepositorioProcesosSQLAlchemy(RepositorioProcesos):
             for cedula, cliente, fecha, tipo in filas
         }
 
+    def ids_existentes(self) -> set[int]:
+        return set(self._sesion.scalars(select(Proceso.id)).all())
+
     def agregar_muchos(self, filas: list[FilaProceso], conservar_id: bool) -> int:
         for fila in filas:
             proceso = Proceso(

@@ -86,6 +86,13 @@ class ImportarProcesos:
         if not opciones.permitir_duplicados:
             existentes = self._repositorio.claves_naturales_existentes()
 
+        # Al conservar los ID del archivo hay que comprobar que esten libres ANTES
+        # de escribir; si no, la base los rechaza y se pierde toda la importacion.
+        ids_ocupados: set[int] = set()
+        if opciones.conservar_id:
+            ids_ocupados = self._repositorio.ids_existentes()
+        ids_vistos: set[int] = set()
+
         resultado = ResultadoImportacion(
             columnas_reconocidas=tuple(sorted(columnas)),
             columnas_ignoradas=ignoradas,
@@ -102,6 +109,13 @@ class ImportarProcesos:
             if motivos:
                 resultado.rechazadas.append(FilaRechazada(numero, motivos, texto))
                 continue
+
+            if opciones.conservar_id and proceso.id_original is not None:
+                motivo = self._id_no_usable(proceso.id_original, ids_ocupados, ids_vistos)
+                if motivo:
+                    resultado.rechazadas.append(FilaRechazada(numero, (motivo,), texto))
+                    continue
+                ids_vistos.add(proceso.id_original)
 
             clave = proceso.clave_natural()
             if not opciones.permitir_duplicados:
@@ -121,6 +135,17 @@ class ImportarProcesos:
             self._guardar(resultado, opciones)
 
         return resultado
+
+    @staticmethod
+    def _id_no_usable(identificador, ocupados, vistos) -> str | None:
+        """Motivo por el que no se puede reutilizar ese ID, o None si esta libre."""
+        if identificador in ocupados:
+            return ("el ID %d ya esta ocupado en la base; desmarque 'Respetar la "
+                    "columna ID del archivo' para que se asigne uno nuevo"
+                    % identificador)
+        if identificador in vistos:
+            return "el ID %d esta repetido dentro del archivo" % identificador
+        return None
 
     def _guardar(self, resultado, opciones) -> None:
         try:

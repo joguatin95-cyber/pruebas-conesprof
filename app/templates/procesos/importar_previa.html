@@ -152,12 +152,13 @@
           action="{{ url_for('importacion.confirmar', pendiente_id=pendiente.id) }}"
           onsubmit="return confirm('Confirmar la carga de {{ resultado.total_validas }} registro(s)?');">
       {{ form.hidden_tag() }}
-      <div class="campo">
+      <details class="avanzadas">
+        <summary>Opciones avanzadas <span class="suave">(normalmente no hace falta tocarlas)</span></summary>
         <label class="check">{{ form.conservar_id() }} {{ form.conservar_id.label.text }}</label>
         <label class="check">{{ form.permitir_duplicados() }} {{ form.permitir_duplicados.label.text }}</label>
-      </div>
-      <p class="nota">Si cambia estas opciones, el archivo se vuelve a procesar con ellas
-      al confirmar.</p>
+        <p class="nota">Si cambia estas opciones, el archivo se vuelve a procesar con
+        ellas al confirmar.</p>
+      </details>
       <div class="acciones-form">
         {{ form.submit(class="boton") }}
       </div>

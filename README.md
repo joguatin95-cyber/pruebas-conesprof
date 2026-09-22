@@ -315,12 +315,26 @@ riesgo. Use `--permitir-duplicados` si de verdad necesita cargarlos.
 |---|---|
 | `--hoja "Datos"` | elige la hoja del Excel (por defecto, la primera) |
 | `--limite 20` | procesa solo las primeras 20 filas, util para una prueba rapida |
-| `--conservar-id` | respeta la columna ID del archivo en vez de generar uno nuevo |
+| `--conservar-id` | respeta la columna ID del archivo en vez de generar uno nuevo (solo para migrar desde otro sistema) |
 | `--permitir-duplicados` | carga tambien los registros repetidos |
 
-Con `--conservar-id` la aplicacion ademas **adelanta la secuencia de PostgreSQL** al mayor
-ID cargado. Sin ese ajuste, el siguiente registro creado desde la interfaz intentaria usar
-un ID que ya existe y fallaria.
+### Sobre conservar los ID del archivo
+
+`--conservar-id` (y su casilla equivalente en la web) solo sirve para **trasladar datos
+desde otro sistema** conservando sus numeros. En el uso diario debe ir desactivada: lo
+normal es que la base asigne los ID.
+
+Si se activa, antes de escribir se comprueba que cada ID del archivo este libre. Los que
+ya esten ocupados en la base, o repetidos dentro del archivo, se **rechazan en la revision
+previa** indicando el numero y como resolverlo. Esa comprobacion existe porque sin ella la
+base rechazaba la insercion completa y la importacion fallaba entera con un mensaje que no
+explicaba nada.
+
+Cuando si se conservan ID, la aplicacion ademas **adelanta la secuencia de PostgreSQL** al
+mayor ID cargado. Sin ese ajuste, el siguiente registro creado desde la interfaz intentaria
+usar un ID que ya existe y fallaria.
+
+Por ese motivo la plantilla que ofrece la aplicacion **no incluye columna ID**.
 
 Cada importacion queda registrada en el historico de cambios como una entrada del usuario
 `sistema`, indicando cuantos registros se cargaron y desde que archivo.

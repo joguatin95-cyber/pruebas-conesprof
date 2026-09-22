@@ -41,6 +41,10 @@ class RepositorioProcesos(ABC):
         """Claves de negocio ya guardadas, para detectar duplicados."""
 
     @abstractmethod
+    def ids_existentes(self) -> set[int]:
+        """Identificadores ya ocupados, para no chocar al conservar los del archivo."""
+
+    @abstractmethod
     def agregar_muchos(self, filas: list[FilaProceso], conservar_id: bool) -> int:
         """Guarda las filas y devuelve cuantas quedaron."""
 

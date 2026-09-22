@@ -171,3 +171,11 @@ input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
 .etiqueta{display:inline-block;background:#dbeafe;color:#1e40af;border-radius:4px;
   padding:2px 8px;font-size:11px;font-weight:600;margin:2px 3px 2px 0}
 .etiqueta-gris{background:#e5e7eb;color:#4b5563}
+
+/* Opciones avanzadas de la importacion: plegadas para que no invite a tocarlas */
+.avanzadas{border:1px solid var(--borde);border-radius:6px;padding:10px 14px;
+  margin-top:16px;background:#fafbfe}
+.avanzadas summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--texto)}
+.avanzadas summary:hover{color:var(--azul)}
+.avanzadas .check{margin-top:12px}
+.avanzadas .nota{margin:6px 0 0 24px}

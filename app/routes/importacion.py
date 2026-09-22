@@ -26,6 +26,7 @@ from flask import (
 )
 from flask_login import current_user, login_required
 from sqlalchemy import delete, select
+from sqlalchemy.exc import IntegrityError
 
 from app.aplicacion.importar_procesos import (
     ImportarProcesos,
@@ -143,6 +144,7 @@ def confirmar(pendiente_id):
         flash("La carga ya no esta disponible; vuelva a subir el archivo.", "warning")
         return redirect(url_for("importacion.formulario"))
 
+    nombre_archivo = pendiente.nombre_archivo
     opciones = OpcionesImportacion(
         aplicar=True,
         hoja=pendiente.hoja,
@@ -151,14 +153,24 @@ def confirmar(pendiente_id):
     )
 
     try:
-        resultado = _caso_de_uso(pendiente.nombre_archivo).ejecutar(
-            pendiente.contenido, pendiente.nombre_archivo, opciones)
+        resultado = _caso_de_uso(nombre_archivo).ejecutar(
+            pendiente.contenido, nombre_archivo, opciones)
     except ErrorDeLectura as error:
         flash(str(error), "danger")
         return redirect(url_for("importacion.formulario"))
+    except IntegrityError:
+        current_app.logger.exception(
+            "Conflicto de integridad al importar %s", pendiente_id)
+        flash(
+            "La base rechazo los registros por un conflicto de identificadores y no "
+            "se guardo nada. Suele ocurrir al marcar 'Respetar la columna ID del "
+            "archivo' cuando esos ID ya existen: desmarquela y vuelva a intentarlo.",
+            "danger")
+        return redirect(url_for("importacion.formulario"))
     except Exception:
         current_app.logger.exception("Fallo la importacion %s", pendiente_id)
-        flash("No se pudo completar la importacion; no se guardo nada.", "danger")
+        flash("No se pudo completar la importacion; no se guardo nada. "
+              "Revise el archivo y vuelva a intentarlo.", "danger")
         return redirect(url_for("importacion.formulario"))
 
     # El archivo ya cumplio su proposito.
@@ -167,7 +179,7 @@ def confirmar(pendiente_id):
 
     if resultado.aplicado:
         flash("Se cargaron %d registro(s) desde %s."
-              % (resultado.total_validas, pendiente.nombre_archivo), "success")
+              % (resultado.total_validas, nombre_archivo), "success")
     else:
         flash("No habia ninguna fila valida para cargar.", "warning")
 
@@ -204,8 +216,8 @@ def plantilla():
 
     salida = _io.StringIO()
     escritor = csv.writer(salida, delimiter=";")
-    escritor.writerow([TITULOS["id"]] + [TITULOS[c] for c in CAMPOS])
-    escritor.writerow(["1", "15/01/2026", "ALMACENES EXITO", "BODEGA NORTE",
+    escritor.writerow([TITULOS[c] for c in CAMPOS])
+    escritor.writerow(["15/01/2026", "ALMACENES EXITO", "BODEGA NORTE",
                        "SELECCION", "MEDELLIN", "1017234567", "JUAN PEREZ",
                        "AUXILIAR LOGISTICO", "28/01/2026", "FINALIZADO",
                        "FA-1001", "OC-5510"])

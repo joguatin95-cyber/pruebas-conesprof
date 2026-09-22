@@ -115,7 +115,8 @@ class SubirArchivoForm(FlaskForm):
         ],
     )
     hoja = StringField("Hoja del Excel (opcional)", validators=[Optional(), Length(max=120)])
-    conservar_id = BooleanField("Respetar la columna ID del archivo")
+    conservar_id = BooleanField(
+        "Respetar la columna ID del archivo (solo para migrar de otro sistema)")
     permitir_duplicados = BooleanField("Cargar tambien los registros repetidos")
     submit = SubmitField("Revisar archivo")
 
@@ -123,6 +124,7 @@ class SubirArchivoForm(FlaskForm):
 class ConfirmarImportacionForm(FlaskForm):
     """Paso 2: confirmar que se escriba en la base."""
 
-    conservar_id = BooleanField("Respetar la columna ID del archivo")
+    conservar_id = BooleanField(
+        "Respetar la columna ID del archivo (solo para migrar de otro sistema)")
     permitir_duplicados = BooleanField("Cargar tambien los registros repetidos")
     submit = SubmitField("Confirmar e importar")
