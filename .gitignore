@@ -19,3 +19,7 @@ instance/
 # Material de otra actividad: se conserva en el disco pero no en el repositorio
 Edgardo avances/
 entregables/
+
+# El asistente IA vive en su propia rama, no en main. Esta regla solo evita que
+# se cuele aqui por accidente; no impide fusionar esa rama mas adelante.
+asistente-ia/
