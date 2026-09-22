@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block titulo %}Importar Excel{% endblock %}
+{% block contenido %}
+
+<div class="encabezado">
+  <h1>Importar desde Excel o CSV</h1>
+  <a class="boton secundario" href="{{ url_for('procesos.listar') }}">Volver a procesos</a>
+</div>
+
+<div class="tarjeta">
+  <form method="post" enctype="multipart/form-data">
+    {{ form.hidden_tag() }}
+
+    <div class="campo">
+      <label>{{ form.archivo.label }}</label>
+      {{ form.archivo(accept=".xlsx,.xlsm,.csv") }}
+      {% for e in form.archivo.errors %}<span class="error">{{ e }}</span>{% endfor %}
+      <span class="suave">Formatos admitidos: {{ extensiones }}. Maximo 10 MB.</span>
+    </div>
+
+    <div class="campo">
+      <label>{{ form.hoja.label }}</label>
+      {{ form.hoja(placeholder="por omision se usa la primera hoja") }}
+    </div>
+
+    <div class="campo">
+      <label class="check">{{ form.conservar_id() }} {{ form.conservar_id.label.text }}</label>
+      <label class="check">{{ form.permitir_duplicados() }} {{ form.permitir_duplicados.label.text }}</label>
+    </div>
+
+    <div class="alerta alerta-info" style="margin-top:16px">
+      Al continuar <b>no se guarda nada todavia</b>: primero se revisa el archivo
+      completo y se le muestra que quedaria cargado, que esta repetido y que tiene
+      errores. Usted decide despues si confirmar.
+    </div>
+
+    <div class="acciones-form">
+      {{ form.submit(class="boton") }}
+      <a class="boton secundario" href="{{ url_for('importacion.plantilla') }}">Descargar plantilla</a>
+    </div>
+  </form>
+</div>
+
+<div class="tarjeta" style="margin-top:18px">
+  <h2 class="titulo-seccion">Como debe verse el archivo</h2>
+  <p>La primera fila son los encabezados. El orden de las columnas no importa, y las
+  mayusculas, tildes y signos son indiferentes.</p>
+
+  <p><b>Columnas obligatorias:</b> FECHA INICIO, CLIENTE, TIPO DE PROCESO, CEDULA, NOMBRE.<br>
+  <b>Opcionales:</b> ID, SUBCLIENTE, CIUDAD, CARGO, FECHA FINALIZACION, ESTADO, FACTURA,
+  ORDEN DE COMPRA.</p>
+
+  <p>Tambien se reconocen nombres alternativos habituales: <span class="suave">Documento,
+  Fecha de Inicio, Tipo Proceso, Nombre Completo, Fecha Fin, Estatus, No Factura,
+  Orden Compra</span>, entre otros.</p>
+
+  <h3 class="titulo-seccion">Se convierte automaticamente</h3>
+  <table class="tabla tabla-simple">
+    <thead><tr><th>LO QUE ESCRIBA</th><th>COMO QUEDA</th></tr></thead>
+    <tbody>
+      <tr><td>15/01/2026, 2026-01-15, o una fecha de Excel</td><td>fecha valida</td></tr>
+      <tr><td>terminado, cerrado, entregado</td><td>FINALIZADO</td></tr>
+      <tr><td>en tramite, en curso, proceso</td><td>EN PROCESO</td></tr>
+      <tr><td>cancelado, desistido</td><td>ANULADO</td></tr>
+      <tr><td>estado vacio</td><td>PENDIENTE</td></tr>
+    </tbody>
+  </table>
+
+  <p class="nota">Se considera repetido un registro con la misma <b>cedula + cliente +
+  fecha de inicio + tipo de proceso</b>. Por eso volver a subir el mismo archivo no
+  duplica nada, y puede cargar por partes sin riesgo.</p>
+</div>
+{% endblock %}

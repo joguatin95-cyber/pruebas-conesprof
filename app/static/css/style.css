@@ -130,3 +130,44 @@ input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
 /* Contrasena temporal: debe resaltar y poder copiarse */
 .alerta-clave{background:#111827;border-color:#111827;color:#fff;font-family:Consolas,
   "Courier New",monospace;font-size:15px;letter-spacing:.6px;user-select:all}
+
+/* Pestanas de mes, al estilo de las hojas de un libro de Excel */
+.hojas{display:flex;gap:2px;overflow-x:auto;padding:0 4px;margin-bottom:-1px;
+  border-bottom:1px solid var(--borde)}
+.hoja{flex:0 0 auto;background:#e8eaf0;color:#475569;border:1px solid var(--borde);
+  border-bottom:none;border-radius:6px 6px 0 0;padding:7px 14px;font-size:12px;
+  font-weight:600;white-space:nowrap}
+.hoja:hover{background:#dde1ea;color:var(--texto)}
+.hoja-activa{background:#fff;color:var(--azul-osc);border-bottom:1px solid #fff;
+  position:relative;z-index:1;box-shadow:0 -2px 0 var(--azul) inset}
+.hoja-total{display:inline-block;margin-left:6px;background:rgba(0,0,0,.08);
+  border-radius:9px;padding:1px 7px;font-size:11px;font-weight:700}
+.hoja-activa .hoja-total{background:#dbeafe;color:var(--azul-osc)}
+
+/* Cuadricula tipo hoja de calculo */
+.hoja-calculo{border-radius:0 6px 6px 6px}
+.hoja-calculo .tabla th,.hoja-calculo .tabla td{border-right:1px solid #eef0f5}
+.hoja-calculo .tabla th{position:sticky;top:0;z-index:2;background:#eef2ff;
+  box-shadow:0 1px 0 var(--borde)}
+.hoja-calculo .tabla tbody tr:nth-child(even){background:#fafbfe}
+.hoja-calculo .tabla tbody tr:hover{background:#eff6ff}
+.col-numero{width:44px;text-align:right;background:#eef2ff;color:#64748b;
+  font-size:11px;font-weight:600;border-right:1px solid var(--borde)!important}
+
+/* Fichas del resumen de importacion */
+.resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;
+  margin-bottom:16px}
+.ficha{background:#fff;border:1px solid var(--borde);border-radius:8px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:2px}
+.ficha-numero{font-size:26px;font-weight:700;line-height:1.1}
+.ficha-texto{font-size:12px;color:var(--suave)}
+.ficha-ok{border-left:4px solid var(--verde)}
+.ficha-ok .ficha-numero{color:#166534}
+.ficha-aviso{border-left:4px solid #f59e0b}
+.ficha-aviso .ficha-numero{color:#92400e}
+.ficha-error{border-left:4px solid var(--rojo)}
+.ficha-error .ficha-numero{color:#991b1b}
+
+.etiqueta{display:inline-block;background:#dbeafe;color:#1e40af;border-radius:4px;
+  padding:2px 8px;font-size:11px;font-weight:600;margin:2px 3px 2px 0}
+.etiqueta-gris{background:#e5e7eb;color:#4b5563}

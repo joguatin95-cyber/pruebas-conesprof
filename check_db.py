@@ -14,7 +14,8 @@ from sqlalchemy import inspect, text
 from app import create_app
 from app.extensions import db
 
-TABLAS_ESPERADAS = {"usuarios", "procesos", "auditoria"}
+TABLAS_ESPERADAS = {"usuarios", "procesos", "auditoria",
+                    "importaciones_pendientes"}
 
 
 def enmascarar(url: str) -> str:

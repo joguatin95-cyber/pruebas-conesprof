@@ -1,6 +1,6 @@
 import csv
 import io
-from datetime import datetime
+from datetime import date, datetime
 
 from flask import (
     Blueprint,
@@ -13,11 +13,12 @@ from flask import (
     url_for,
 )
 from flask_login import current_user, login_required
-from sqlalchemy import false, or_, select
+from sqlalchemy import false, func, or_, select, text
 
 from app.auditoria import comparar, instantanea, registrar
 from app.extensions import db
 from app.forms import ProcesoForm
+from app.dominio.procesos import nombre_mes
 from app.models import ESTADOS, Auditoria, Proceso
 from app.security import solo_administrador
 
@@ -48,8 +49,12 @@ def _volcar_form(form, proceso):
         setattr(proceso, campo, getattr(form, campo).data)
 
 
-def _construir_consulta():
-    """Arma la consulta de procesos aplicando el alcance del usuario y los filtros."""
+def _construir_consulta(aplicar_filtros=True):
+    """Arma la consulta de procesos aplicando el alcance del usuario y los filtros.
+
+    Con aplicar_filtros=False se obtiene solo el alcance (lo que el usuario tiene
+    derecho a ver), que es la base para calcular las pestanas de mes.
+    """
     consulta = select(Proceso)
 
     # El rol CLIENTE solo puede ver los registros del cliente que tenga asignado.
@@ -59,6 +64,9 @@ def _construir_consulta():
             # Sin cliente asignado no se muestra ningun registro.
             return consulta.where(false())
         consulta = consulta.where(Proceso.cliente.ilike(asignado))
+
+    if not aplicar_filtros:
+        return consulta
 
     buscar = (request.args.get("q") or "").strip()
     if buscar:
@@ -81,6 +89,17 @@ def _construir_consulta():
     if estado:
         consulta = consulta.where(Proceso.estado == estado)
 
+    # Pestana de mes (formato aaaa-mm), al estilo de las hojas de un Excel.
+    mes = (request.args.get("mes") or "").strip()
+    if mes:
+        anio_mes = _anio_mes(mes)
+        if anio_mes:
+            anio, numero = anio_mes
+            inicio = date(anio, numero, 1)
+            fin = date(anio + (numero == 12), (numero % 12) + 1, 1)
+            consulta = consulta.where(
+                Proceso.fecha_inicio >= inicio, Proceso.fecha_inicio < fin)
+
     desde = _fecha(request.args.get("desde"))
     if desde:
         consulta = consulta.where(Proceso.fecha_inicio >= desde)
@@ -90,6 +109,39 @@ def _construir_consulta():
         consulta = consulta.where(Proceso.fecha_inicio <= hasta)
 
     return consulta.order_by(Proceso.id.desc())
+
+
+def _anio_mes(valor):
+    """Interpreta 'aaaa-mm'. Devuelve (anio, mes) o None."""
+    try:
+        anio, numero = valor.split("-")
+        anio, numero = int(anio), int(numero)
+    except (ValueError, AttributeError):
+        return None
+    return (anio, numero) if 1 <= numero <= 12 else None
+
+
+def _meses_disponibles():
+    """Meses que tienen registros dentro del alcance del usuario.
+
+    Se calcula en la base con una consulta agregada, no trayendo los procesos a
+    memoria, para que siga funcionando con muchos registros.
+    """
+    base = _construir_consulta(aplicar_filtros=False).subquery()
+    # Cada motor tiene su propia funcion para dar formato a una fecha.
+    es_postgres = db.session.get_bind().dialect.name == "postgresql"
+    columna = (func.to_char(base.c.fecha_inicio, "YYYY-MM") if es_postgres
+               else func.strftime("%Y-%m", base.c.fecha_inicio))
+
+    filas = db.session.execute(
+        select(columna.label("mes"), func.count().label("total"))
+        .group_by("mes").order_by(text("mes DESC"))
+    ).all()
+
+    return [
+        {"valor": m, "etiqueta": "%s %s" % (nombre_mes(int(m[5:7])), m[:4]), "total": t}
+        for m, t in filas if m
+    ]
 
 
 def _fecha(valor):
@@ -119,6 +171,11 @@ def listar():
         columnas=COLUMNAS,
         estados=ESTADOS,
         filtros=filtros,
+        meses=_meses_disponibles(),
+        mes_activo=(request.args.get("mes") or "").strip(),
+        # Los enlaces de las pestanas conservan los demas filtros, no el mes.
+        filtros_sin_mes={k: v for k, v in filtros.items() if k != "mes"},
+        primer_numero=(paginacion.page - 1) * paginacion.per_page + 1,
     )
 
 

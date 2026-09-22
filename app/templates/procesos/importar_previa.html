@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+{% block titulo %}Revision del archivo{% endblock %}
+{% block contenido %}
+
+<div class="encabezado">
+  <h1>Revision del archivo</h1>
+  <span class="suave">{{ resultado.origen }}</span>
+</div>
+
+<div class="alerta alerta-info">
+  Todavia <b>no se ha guardado nada</b>. Esto es lo que ocurriria si confirma.
+</div>
+
+<div class="resumen">
+  <div class="ficha ficha-ok">
+    <span class="ficha-numero">{{ resultado.total_validas }}</span>
+    <span class="ficha-texto">se cargarian</span>
+  </div>
+  <div class="ficha {% if resultado.total_duplicadas %}ficha-aviso{% endif %}">
+    <span class="ficha-numero">{{ resultado.total_duplicadas }}</span>
+    <span class="ficha-texto">duplicadas (se omiten)</span>
+  </div>
+  <div class="ficha {% if resultado.total_rechazadas %}ficha-error{% endif %}">
+    <span class="ficha-numero">{{ resultado.total_rechazadas }}</span>
+    <span class="ficha-texto">con errores (se omiten)</span>
+  </div>
+  <div class="ficha">
+    <span class="ficha-numero">{{ resultado.filas_leidas }}</span>
+    <span class="ficha-texto">filas leidas</span>
+  </div>
+</div>
+
+<div class="tarjeta">
+  <p><b>Columnas reconocidas:</b>
+    {% for c in resultado.columnas_reconocidas %}<span class="etiqueta">{{ etiquetas.get(c, c) }}</span>{% endfor %}
+  </p>
+  {% if resultado.columnas_ignoradas %}
+  <p><b>Columnas ignoradas:</b>
+    {% for c in resultado.columnas_ignoradas %}<span class="etiqueta etiqueta-gris">{{ c }}</span>{% endfor %}
+    <span class="suave">no corresponden a ningun campo y no se cargan</span>
+  </p>
+  {% endif %}
+  {% if hojas|length > 1 %}
+  <p class="nota">El archivo tiene varias hojas ({{ hojas|join(', ') }}) y se leyo
+  {{ resultado.origen.split(' - ')[-1] }}. Si no es la correcta, vuelva atras e indique
+  el nombre de la hoja.</p>
+  {% endif %}
+</div>
+
+{% if resultado.rechazadas %}
+<div class="tarjeta" style="margin-top:18px">
+  <h2 class="titulo-seccion">Filas con errores ({{ resultado.total_rechazadas }})</h2>
+  <p class="suave">No detienen la importacion: se carga el resto. Corrijalas y vuelva a
+  subir solo esas.</p>
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead><tr><th>FILA</th><th>MOTIVO</th><th>CLIENTE</th><th>CEDULA</th><th>NOMBRE</th></tr></thead>
+      <tbody>
+        {% for f in resultado.rechazadas[:40] %}
+        <tr>
+          <td>{{ f.numero }}</td>
+          <td class="detalle"><span class="despues" style="color:#991b1b">{{ f.motivo }}</span></td>
+          <td>{{ f.valores.get('cliente', '') }}</td>
+          <td>{{ f.valores.get('cedula', '') }}</td>
+          <td>{{ f.valores.get('nombre', '') }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if resultado.total_rechazadas > 40 %}
+    <p class="nota">Se muestran las primeras 40 de {{ resultado.total_rechazadas }}.</p>
+  {% endif %}
+  <p style="margin-top:12px">
+    <a class="boton secundario"
+       href="{{ url_for('importacion.rechazadas', pendiente_id=pendiente.id) }}">
+      Descargar las rechazadas en CSV</a>
+  </p>
+</div>
+{% endif %}
+
+{% if resultado.duplicadas %}
+<div class="tarjeta" style="margin-top:18px">
+  <h2 class="titulo-seccion">Duplicadas ({{ resultado.total_duplicadas }})</h2>
+  <div class="tabla-scroll">
+    <table class="tabla">
+      <thead><tr><th>FILA</th><th>CEDULA</th><th>CLIENTE</th><th>FECHA INICIO</th><th>MOTIVO</th></tr></thead>
+      <tbody>
+        {% for d in resultado.duplicadas[:25] %}
+        <tr>
+          <td>{{ d.numero }}</td>
+          <td>{{ d.fila.cedula }}</td>
+          <td>{{ d.fila.cliente }}</td>
+          <td>{{ d.fila.fecha_inicio }}</td>
+          <td class="suave">{{ d.donde }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if resultado.total_duplicadas > 25 %}
+    <p class="nota">Se muestran las primeras 25 de {{ resultado.total_duplicadas }}.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if resultado.validas %}
+<div class="tarjeta" style="margin-top:18px">
+  <h2 class="titulo-seccion">Vista previa de lo que se cargaria</h2>
+  <div class="tabla-scroll hoja-calculo">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th class="col-numero"></th>
+          {% for c in ['fecha_inicio','cliente','subcliente','tipo_proceso','ciudad',
+                       'cedula','nombre','cargo','fecha_finalizacion','estado',
+                       'factura','orden_compra'] %}
+            <th>{{ etiquetas.get(c, c)|upper }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for f in resultado.validas[:20] %}
+        <tr>
+          <td class="col-numero">{{ loop.index }}</td>
+          <td>{{ f.fecha_inicio }}</td>
+          <td>{{ f.cliente }}</td>
+          <td>{{ f.subcliente or '' }}</td>
+          <td>{{ f.tipo_proceso }}</td>
+          <td>{{ f.ciudad or '' }}</td>
+          <td>{{ f.cedula }}</td>
+          <td>{{ f.nombre }}</td>
+          <td>{{ f.cargo or '' }}</td>
+          <td>{{ f.fecha_finalizacion or '' }}</td>
+          <td><span class="estado estado-{{ f.estado|lower|replace(' ', '-') }}">{{ f.estado }}</span></td>
+          <td>{{ f.factura or '' }}</td>
+          <td>{{ f.orden_compra or '' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if resultado.total_validas > 20 %}
+    <p class="nota">Se muestran las primeras 20 de {{ resultado.total_validas }}.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="tarjeta" style="margin-top:18px">
+  {% if resultado.hay_algo_que_cargar %}
+    <form method="post"
+          action="{{ url_for('importacion.confirmar', pendiente_id=pendiente.id) }}"
+          onsubmit="return confirm('Confirmar la carga de {{ resultado.total_validas }} registro(s)?');">
+      {{ form.hidden_tag() }}
+      <div class="campo">
+        <label class="check">{{ form.conservar_id() }} {{ form.conservar_id.label.text }}</label>
+        <label class="check">{{ form.permitir_duplicados() }} {{ form.permitir_duplicados.label.text }}</label>
+      </div>
+      <p class="nota">Si cambia estas opciones, el archivo se vuelve a procesar con ellas
+      al confirmar.</p>
+      <div class="acciones-form">
+        {{ form.submit(class="boton") }}
+      </div>
+    </form>
+  {% else %}
+    <p>No hay ninguna fila valida para cargar. Corrija el archivo y vuelva a subirlo.</p>
+  {% endif %}
+
+  <form method="post"
+        action="{{ url_for('importacion.descartar', pendiente_id=pendiente.id) }}"
+        style="margin-top:10px">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <button class="boton secundario" type="submit">Descartar y volver</button>
+  </form>
+</div>
+{% endblock %}

@@ -101,3 +101,28 @@ class FotoForm(FlaskForm):
         ],
     )
     submit = SubmitField("Guardar foto")
+
+
+class SubirArchivoForm(FlaskForm):
+    """Paso 1 de la importacion: elegir el archivo y las opciones."""
+
+    archivo = FileField(
+        "Archivo de Excel o CSV",
+        validators=[
+            DataRequired(message="Seleccione un archivo."),
+            FileAllowed(["xlsx", "xlsm", "csv", "txt"],
+                        "Solo se admiten archivos .xlsx, .xlsm o .csv."),
+        ],
+    )
+    hoja = StringField("Hoja del Excel (opcional)", validators=[Optional(), Length(max=120)])
+    conservar_id = BooleanField("Respetar la columna ID del archivo")
+    permitir_duplicados = BooleanField("Cargar tambien los registros repetidos")
+    submit = SubmitField("Revisar archivo")
+
+
+class ConfirmarImportacionForm(FlaskForm):
+    """Paso 2: confirmar que se escriba en la base."""
+
+    conservar_id = BooleanField("Respetar la columna ID del archivo")
+    permitir_duplicados = BooleanField("Cargar tambien los registros repetidos")
+    submit = SubmitField("Confirmar e importar")

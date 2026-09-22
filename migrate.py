@@ -4,6 +4,7 @@ Agrega, si faltan:
   - la columna usuarios.cliente_asignado
   - la tabla auditoria (historico de cambios)
   - las columnas de la foto de perfil (usuarios.foto, foto_mime, foto_actualizada_en)
+  - la tabla importaciones_pendientes (cargas de Excel a la espera de confirmacion)
 
 Es idempotente: puede ejecutarse varias veces sin efecto adicional.
 Funciona con PostgreSQL y con SQLite.
@@ -47,12 +48,14 @@ def main():
                     )
                 print("Columna usuarios.%s agregada." % nombre)
 
-        if "auditoria" in tablas:
-            print("La tabla auditoria ya existe.")
-        else:
-            # create_all solo crea lo que falta, no toca las tablas existentes.
+        # create_all solo crea lo que falta, no toca las tablas existentes.
+        faltantes = [t for t in ("auditoria", "importaciones_pendientes")
+                     if t not in tablas]
+        if faltantes:
             db.create_all()
-            print("Tabla auditoria creada.")
+            print("Tablas creadas: %s." % ", ".join(faltantes))
+        else:
+            print("Las tablas auditoria e importaciones_pendientes ya existen.")
 
         print("Migracion completada.")
 

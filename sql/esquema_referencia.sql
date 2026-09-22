@@ -65,3 +65,18 @@ ALTER TABLE usuarios ADD COLUMN cliente_asignado VARCHAR(120);
 ALTER TABLE usuarios ADD COLUMN foto BYTEA;
 ALTER TABLE usuarios ADD COLUMN foto_mime VARCHAR(30);
 ALTER TABLE usuarios ADD COLUMN foto_actualizada_en TIMESTAMP;
+
+-- Cargas de Excel a la espera de confirmacion del administrador (agregado
+-- posteriormente). Se guardan en la base y no en disco porque el almacenamiento
+-- de Render es efimero y varios procesos de gunicorn atienden las peticiones.
+CREATE TABLE importaciones_pendientes (
+    id             SERIAL PRIMARY KEY,
+    usuario_id     INTEGER      NOT NULL,
+    nombre_archivo VARCHAR(255) NOT NULL,
+    hoja           VARCHAR(120),
+    contenido      BYTEA        NOT NULL,
+    creado_en      TIMESTAMP    NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX ix_importaciones_pendientes_usuario ON importaciones_pendientes (usuario_id);
+CREATE INDEX ix_importaciones_pendientes_creado  ON importaciones_pendientes (creado_en);

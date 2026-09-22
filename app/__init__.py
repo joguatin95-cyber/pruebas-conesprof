@@ -26,12 +26,14 @@ def create_app(config_class=Config):
 
     from app.routes.auditoria import bp as auditoria_bp
     from app.routes.auth import bp as auth_bp
+    from app.routes.importacion import bp as importacion_bp
     from app.routes.perfil import bp as perfil_bp
     from app.routes.procesos import bp as procesos_bp
     from app.routes.usuarios import bp as usuarios_bp
 
     app.register_blueprint(auditoria_bp)
     app.register_blueprint(auth_bp)
+    app.register_blueprint(importacion_bp)
     app.register_blueprint(perfil_bp)
     app.register_blueprint(procesos_bp)
     app.register_blueprint(usuarios_bp)

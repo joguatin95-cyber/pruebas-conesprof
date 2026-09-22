@@ -46,6 +46,19 @@ Detalles de diseno:
   elimina despues.
 - Una edicion que no modifica ningun campo no genera movimiento.
 
+## Vista por meses
+
+La pantalla de procesos agrupa los registros en **pestanas de mes**, como las hojas de un
+libro de Excel: `Todos`, `Septiembre 2026`, `Agosto 2026`... Cada pestana muestra cuantos
+registros contiene, y al cambiar de pestana se conservan los demas filtros activos.
+
+La tabla imita una hoja de calculo: columna de numero de fila, cuadricula, encabezado que
+queda fijo al desplazarse y filas alternadas.
+
+Los meses se calculan con una consulta agregada en la base (`GROUP BY`), no trayendo los
+procesos a memoria, y respetan el alcance del usuario: un CLIENTE solo ve los meses en
+los que su propio cliente tiene registros.
+
 ## Pantalla principal
 
 Tabla con las columnas solicitadas:
@@ -148,6 +161,44 @@ python migrate.py
 Agrega la columna `usuarios.cliente_asignado` y la tabla `auditoria` si faltan.
 Es idempotente y funciona tanto en PostgreSQL como en SQLite.
 
+## Arquitectura
+
+El codigo nuevo sigue Arquitectura Limpia: las dependencias apuntan siempre hacia
+adentro, y el dominio no conoce a nadie.
+
+```
+app/
+  dominio/            Entidades y reglas. Sin Flask, sin SQLAlchemy, sin Excel.
+    procesos.py       FilaProceso, estados, campos obligatorios, clave natural
+    normalizacion.py  Como se interpretan fechas, estados y encabezados reales
+  aplicacion/         Casos de uso y PUERTOS (abstracciones)
+    puertos.py        LectorTabular, RepositorioProcesos, RegistroDeAuditoria
+    importar_procesos.py   El caso de uso ImportarProcesos
+  infraestructura/    ADAPTADORES: implementan los puertos
+    lectores.py       LectorExcel, LectorCsv y la factory lector_para()
+    repositorios.py   RepositorioProcesosSQLAlchemy, AuditoriaSQLAlchemy
+  routes/             Presentacion (Flask). Capa delgada: no contiene reglas.
+```
+
+### Patrones aplicados y por que
+
+| Patron | Donde | Que problema resuelve |
+|---|---|---|
+| **Puertos y adaptadores** | `aplicacion/puertos.py` | El caso de uso se prueba con dobles en memoria, sin Excel ni base de datos |
+| **Strategy** | `LectorExcel` / `LectorCsv` | Agregar otro formato no obliga a tocar el caso de uso |
+| **Factory Method** | `lector_para(nombre)` | Quien llama no necesita conocer las clases concretas |
+| **Repository** | `RepositorioProcesos` | Aisla la persistencia; el dominio no sabe que existe SQLAlchemy |
+| **Inyeccion por constructor** | `ImportarProcesos.__init__` | Invierte la dependencia (la D de SOLID) |
+| **Objeto de resultado** | `ResultadoImportacion` | Una importacion reporta TODOS los errores, no se detiene en el primero |
+
+La consecuencia practica: la pantalla web y el script de consola comparten exactamente
+la misma logica de importacion. Antes esa logica vivia dentro de `importar.py` y la web
+no podia reutilizarla.
+
+**El codigo anterior a esta refactorizacion (rutas de usuarios, procesos y auditoria)
+todavia mezcla reglas con acceso a datos.** Se ira moviendo a esta estructura a medida
+que se toque, para no reescribir de golpe lo que ya funciona y esta probado.
+
 ## Mi perfil
 
 Todos los usuarios —incluidos CONTADOR y CLIENTE— tienen un panel propio en
@@ -183,7 +234,31 @@ anterior. El alfabeto excluye los caracteres que se confunden al dictarla (O, 0,
 En el historico de cambios queda constancia de que la contrasena cambio y de quien lo
 hizo, pero **nunca el valor**.
 
-## Importacion masiva desde Excel o CSV
+## Importar un Excel desde la aplicacion
+
+**Procesos -> Importar Excel** (solo ADMINISTRADOR). El flujo tiene dos pasos y el
+primero no escribe nada:
+
+1. **Subir y revisar.** Se valida el archivo completo y se muestra cuantas filas se
+   cargarian, cuantas estan repetidas y cuales tienen errores, con una vista previa de
+   los primeros 20 registros. Las filas con error se pueden descargar en CSV para
+   corregirlas.
+2. **Confirmar.** Solo entonces se escribe en la base.
+
+El archivo subido se guarda en la tabla `importaciones_pendientes` entre los dos pasos, y
+se borra al confirmar o descartar. Los que queden sin confirmar se descartan solos a las
+12 horas. Se guarda en la base y no en disco por dos razones: el almacenamiento de Render
+es efimero, y con varios procesos de gunicorn no hay garantia de que la confirmacion
+caiga en el mismo proceso que recibio la subida.
+
+**Agregar un registro suelto sigue disponible** en *+ Nuevo registro*: la importacion no
+lo reemplaza.
+
+Las reglas de conversion, las columnas reconocidas y la deteccion de duplicados son las
+mismas que usa el script de consola, porque comparten el caso de uso. Estan descritas en
+la seccion siguiente.
+
+## Importacion por consola (Excel o CSV)
 
 ```bash
 python importar.py mis_datos.xlsx              # 1) SIMULA y muestra el informe
@@ -361,7 +436,7 @@ run.py              Punto de entrada
 seed.py             Crea tablas, administrador inicial y datos de ejemplo
 migrate.py          Actualiza una base existente al modelo actual
 check_db.py         Diagnostica la conexion a la base de datos
-importar.py         Importacion masiva desde Excel o CSV
+importar.py         Importacion por consola (adaptador del caso de uso)
 plantillas/         Modelos de archivo para la importacion
 render.yaml         Configuracion del despliegue en Render
 ```

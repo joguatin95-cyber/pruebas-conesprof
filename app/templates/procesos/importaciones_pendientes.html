@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block titulo %}Cargas sin confirmar{% endblock %}
+{% block contenido %}
+<div class="encabezado">
+  <h1>Cargas sin confirmar</h1>
+  <a class="boton secundario" href="{{ url_for('importacion.formulario') }}">Importar otro archivo</a>
+</div>
+<div class="tabla-scroll">
+  <table class="tabla">
+    <thead><tr><th>ARCHIVO</th><th>HOJA</th><th>SUBIDO</th><th class="col-acciones">ACCIONES</th></tr></thead>
+    <tbody>
+      {% for p in pendientes %}
+      <tr>
+        <td>{{ p.nombre_archivo }}</td>
+        <td>{{ p.hoja or '(primera)' }}</td>
+        <td>{{ p.creado_en.strftime('%Y-%m-%d %H:%M') }}</td>
+        <td class="col-acciones">
+          <form method="post" action="{{ url_for('importacion.descartar', pendiente_id=p.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="mini-boton peligro" type="submit">Descartar</button>
+          </form>
+        </td>
+      </tr>
+      {% else %}
+      <tr><td class="vacio" colspan="4">No hay cargas pendientes.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+<p class="nota">Las cargas sin confirmar se descartan solas a las 12 horas.</p>
+{% endblock %}

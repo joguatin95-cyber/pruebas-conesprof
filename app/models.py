@@ -4,6 +4,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from app.dominio.procesos import ESTADOS as _ESTADOS
 from app.extensions import db
 
 # Roles disponibles en la plataforma.
@@ -12,13 +13,9 @@ ROL_CONTADOR = "CONTADOR"
 ROL_CLIENTE = "CLIENTE"
 ROLES = (ROL_ADMINISTRADOR, ROL_CONTADOR, ROL_CLIENTE)
 
-# Estados posibles de un proceso.
-ESTADOS = (
-    "PENDIENTE",
-    "EN PROCESO",
-    "FINALIZADO",
-    "ANULADO",
-)
+# Los estados los define el dominio; aqui solo se reexportan para no romper
+# los import existentes (from app.models import ESTADOS).
+ESTADOS = _ESTADOS
 
 
 class Usuario(UserMixin, db.Model):
@@ -142,3 +139,26 @@ class Auditoria(db.Model):
 
     def __repr__(self) -> str:
         return f"<Auditoria {self.accion} {self.entidad}#{self.entidad_id}>"
+
+
+class ImportacionPendiente(db.Model):
+    """Archivo subido que espera confirmacion del administrador.
+
+    Se guarda en la base y no en disco por dos razones: el almacenamiento de
+    Render es efimero, y con varios procesos de gunicorn atendiendo peticiones no
+    hay garantia de que la confirmacion caiga en el mismo proceso que recibio la
+    subida.
+    """
+
+    __tablename__ = "importaciones_pendientes"
+
+    id = db.Column(db.Integer, primary_key=True)
+    usuario_id = db.Column(db.Integer, nullable=False, index=True)
+    nombre_archivo = db.Column(db.String(255), nullable=False)
+    hoja = db.Column(db.String(120), nullable=True)
+    contenido = db.Column(db.LargeBinary, nullable=False)
+    creado_en = db.Column(db.DateTime, nullable=False, default=datetime.utcnow,
+                          index=True)
+
+    def __repr__(self) -> str:
+        return f"<ImportacionPendiente {self.id} {self.nombre_archivo}>"
