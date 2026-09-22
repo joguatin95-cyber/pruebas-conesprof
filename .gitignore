@@ -15,3 +15,7 @@ instance/
 *_rechazadas.csv
 
 .DS_Store
+
+# Material de otra actividad: se conserva en el disco pero no en el repositorio
+Edgardo avances/
+entregables/
