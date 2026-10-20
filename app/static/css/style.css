@@ -57,6 +57,7 @@ input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
 .chip-administrador{background:#fde68a;color:#78350f}
 .chip-contador{background:#c7d2fe;color:#3730a3}
 .chip-cliente{background:#bbf7d0;color:#14532d}
+.chip-proveedor{background:#fed7aa;color:#7c2d12}
 
 /* Paginacion, alertas, notas */
 .paginacion{display:flex;gap:14px;align-items:center;justify-content:center;margin-top:16px;color:var(--suave)}

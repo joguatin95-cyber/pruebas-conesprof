@@ -44,7 +44,7 @@ class UsuarioForm(FlaskForm):
     email = StringField("Correo", validators=[Optional(), Email(), Length(max=120)])
     rol = SelectField("Rol", choices=[(r, r) for r in ROLES], validators=[DataRequired()])
     cliente_asignado = StringField(
-        "Cliente asignado (solo rol CLIENTE)", validators=[Optional(), Length(max=120)]
+        "Cliente asignado (solo roles CLIENTE y PROVEEDOR)", validators=[Optional(), Length(max=120)]
     )
     activo = BooleanField("Activo", default=True)
     password = PasswordField("Contrasena", validators=[DataRequired(), Length(min=8)])
@@ -63,7 +63,7 @@ class UsuarioEditarForm(FlaskForm):
     email = StringField("Correo", validators=[Optional(), Email(), Length(max=120)])
     rol = SelectField("Rol", choices=[(r, r) for r in ROLES], validators=[DataRequired()])
     cliente_asignado = StringField(
-        "Cliente asignado (solo rol CLIENTE)", validators=[Optional(), Length(max=120)]
+        "Cliente asignado (solo roles CLIENTE y PROVEEDOR)", validators=[Optional(), Length(max=120)]
     )
     activo = BooleanField("Activo")
     password = PasswordField(

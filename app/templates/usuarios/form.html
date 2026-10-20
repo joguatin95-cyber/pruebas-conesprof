@@ -25,9 +25,10 @@
     <datalist id="lista-clientes">
       {% for c in clientes or [] %}<option value="{{ c }}">{% endfor %}
     </datalist>
-    <p class="nota">ADMINISTRADOR: acceso total. CONTADOR y CLIENTE: solo lectura.<br>
-    El campo <b>Cliente asignado</b> solo aplica al rol CLIENTE: limita lo que ese usuario ve
-    a los registros de ese cliente. Si se deja vacio, el usuario no vera ningun registro.</p>
+    <p class="nota">ADMINISTRADOR: acceso total. CONTADOR, CLIENTE y PROVEEDOR: solo lectura.<br>
+    El campo <b>Cliente asignado</b> solo aplica a los roles <b>CLIENTE</b> y <b>PROVEEDOR</b>:
+    limita lo que ese usuario ve a los registros de ese cliente. Si se deja vacio, el usuario
+    no vera ningun registro.</p>
     <div class="acciones-form">
       {{ form.submit(class="boton") }}
       <a class="boton secundario" href="{{ url_for('usuarios.listar') }}">Cancelar</a>

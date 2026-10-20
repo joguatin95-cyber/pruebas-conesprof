@@ -57,7 +57,9 @@ CREATE INDEX ix_auditoria_accion     ON auditoria (accion);
 CREATE INDEX ix_auditoria_entidad    ON auditoria (entidad);
 CREATE INDEX ix_auditoria_entidad_id ON auditoria (entidad_id);
 
--- Alcance por cliente del rol CLIENTE (agregado posteriormente).
+-- Alcance por cliente de los roles CLIENTE y PROVEEDOR (agregado posteriormente).
+-- El rol se guarda como texto libre (sin CHECK ni ENUM): agregar un rol nuevo en la
+-- aplicacion no requiere ninguna migracion de la base.
 ALTER TABLE usuarios ADD COLUMN cliente_asignado VARCHAR(120);
 
 -- Foto de perfil (agregado posteriormente). Se guarda en la base y no en disco

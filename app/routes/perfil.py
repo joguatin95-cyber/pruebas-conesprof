@@ -1,6 +1,7 @@
 """Panel personal: cualquier usuario puede cambiar su contrasena y su foto.
 
-Es la unica parte de la aplicacion donde CONTADOR y CLIENTE pueden escribir, y
+Es la unica parte de la aplicacion donde CONTADOR, CLIENTE y PROVEEDOR pueden
+escribir, y
 siempre limitada a su propia cuenta: nunca reciben el id del usuario por la URL,
 se toma de la sesion.
 """

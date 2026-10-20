@@ -8,7 +8,7 @@ from sqlalchemy import select, update
 from app.auditoria import comparar, instantanea, registrar
 from app.extensions import db
 from app.forms import UsuarioEditarForm, UsuarioForm
-from app.models import Proceso, Usuario
+from app.models import ROLES_CON_ALCANCE_POR_CLIENTE, Proceso, Usuario
 from app.security import solo_administrador
 
 bp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
@@ -25,7 +25,7 @@ def _existe(campo, valor, excluir_id=None):
 
 
 def _clientes_existentes():
-    """Lista de clientes ya registrados, para sugerirlos al asignar un CLIENTE."""
+    """Clientes ya registrados, para sugerirlos al asignar un CLIENTE o PROVEEDOR."""
     return db.session.scalars(
         select(Proceso.cliente).distinct().order_by(Proceso.cliente)
     ).all()
@@ -57,10 +57,10 @@ def crear():
                 nombre=form.nombre.data.strip(),
                 email=email,
                 rol=form.rol.data,
-                # El cliente asignado solo tiene sentido para el rol CLIENTE.
+                # El cliente asignado solo tiene sentido en los roles con alcance.
                 cliente_asignado=(
                     (form.cliente_asignado.data or "").strip() or None
-                    if form.rol.data == "CLIENTE"
+                    if form.rol.data in ROLES_CON_ALCANCE_POR_CLIENTE
                     else None
                 ),
                 activo=form.activo.data,
@@ -78,8 +78,8 @@ def crear():
             flash(f"Usuario '{usuario.username}' creado correctamente.", "success")
             if usuario.sin_cliente_asignado:
                 flash(
-                    "El usuario tiene rol CLIENTE sin cliente asignado: no vera ningun "
-                    "registro hasta que le asigne uno.",
+                    f"El usuario tiene rol {usuario.rol} sin cliente asignado: no vera "
+                    "ningun registro hasta que le asigne uno.",
                     "warning",
                 )
             return redirect(url_for("usuarios.listar"))
@@ -120,7 +120,7 @@ def editar(usuario_id):
             usuario.rol = form.rol.data
             usuario.cliente_asignado = (
                 (form.cliente_asignado.data or "").strip() or None
-                if form.rol.data == "CLIENTE"
+                if form.rol.data in ROLES_CON_ALCANCE_POR_CLIENTE
                 else None
             )
             usuario.activo = form.activo.data
@@ -139,8 +139,8 @@ def editar(usuario_id):
             flash(f"Usuario '{usuario.username}' actualizado correctamente.", "success")
             if usuario.sin_cliente_asignado:
                 flash(
-                    "El usuario tiene rol CLIENTE sin cliente asignado: no vera ningun "
-                    "registro hasta que le asigne uno.",
+                    f"El usuario tiene rol {usuario.rol} sin cliente asignado: no vera "
+                    "ningun registro hasta que le asigne uno.",
                     "warning",
                 )
             return redirect(url_for("usuarios.listar"))

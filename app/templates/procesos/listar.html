@@ -108,8 +108,8 @@
 <p class="nota aviso">Su usuario no tiene un cliente asignado, por eso no se muestran
 registros. Solicite al administrador que le asigne uno.</p>
 {% elif current_user.limitado_por_cliente %}
-<p class="nota">Su rol (CLIENTE) tiene permisos de solo lectura y muestra unicamente los
-registros de <b>{{ current_user.cliente_asignado }}</b>.</p>
+<p class="nota">Su rol ({{ current_user.rol }}) tiene permisos de solo lectura y muestra
+unicamente los registros de <b>{{ current_user.cliente_asignado }}</b>.</p>
 {% elif not current_user.es_administrador %}
 <p class="nota">Su rol ({{ current_user.rol }}) tiene permisos de solo lectura.</p>
 {% endif %}

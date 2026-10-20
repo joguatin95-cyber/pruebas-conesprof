@@ -10,24 +10,35 @@ sobre **PostgreSQL**.
 | **ADMINISTRADOR** | Si | Si | Si |
 | **CONTADOR** | Si (todos los clientes) | No | No |
 | **CLIENTE** | Solo su cliente asignado | No | No |
+| **PROVEEDOR** | Solo su cliente asignado | No | No |
 
 El control se aplica en dos capas: la interfaz oculta las acciones no permitidas y cada
 ruta de escritura esta protegida por el decorador `@solo_administrador`, de modo que un
 usuario sin permisos recibe **403** aunque escriba la URL directamente.
 
-### Alcance del rol CLIENTE
+`CLIENTE` y `PROVEEDOR` se comportan igual: son dos etiquetas distintas para el mismo
+nivel de acceso (solo lectura, limitado al cliente asignado). Se separan para poder
+distinguir con quien corresponde cada cuenta sin tener que mirar el nombre.
 
-Cada usuario con rol CLIENTE tiene un campo **Cliente asignado** y solo ve los registros
-de ese cliente. El filtro se aplica en la consulta misma, no en la vista, asi que tambien
+### Alcance de los roles CLIENTE y PROVEEDOR
+
+Cada usuario con rol CLIENTE o PROVEEDOR tiene un campo **Cliente asignado** y solo ve los
+registros de ese cliente. El filtro se aplica en la consulta misma, no en la vista, asi que tambien
 cubre el buscador, los filtros y la exportacion a CSV: el usuario no puede ver registros
 de otro cliente por mas que cambie los parametros de la URL.
 
-Si un usuario CLIENTE **no tiene cliente asignado no ve ningun registro** (comportamiento
+Si una de esas cuentas **no tiene cliente asignado no ve ningun registro** (comportamiento
 restrictivo por seguridad). La aplicacion avisa de esa situacion al administrador cuando
 crea o edita la cuenta, y la marca como *sin asignar* en el listado de usuarios.
 
 Al cambiar el rol de un usuario a ADMINISTRADOR o CONTADOR, el cliente asignado se limpia
 automaticamente.
+
+Que roles tienen este alcance se declara en un unico sitio, la tupla
+`ROLES_CON_ALCANCE_POR_CLIENTE` de `app/models.py`. El formulario de usuarios y la consulta
+de procesos la consultan en lugar de comparar contra un rol concreto, de modo que agregar
+otro rol equivalente es una sola linea. El rol se guarda como texto (`VARCHAR(20)`, sin
+`CHECK` ni `ENUM`), asi que un rol nuevo no exige migrar la base.
 
 ### Historico de cambios
 
@@ -56,8 +67,8 @@ La tabla imita una hoja de calculo: columna de numero de fila, cuadricula, encab
 queda fijo al desplazarse y filas alternadas.
 
 Los meses se calculan con una consulta agregada en la base (`GROUP BY`), no trayendo los
-procesos a memoria, y respetan el alcance del usuario: un CLIENTE solo ve los meses en
-los que su propio cliente tiene registros.
+procesos a memoria, y respetan el alcance del usuario: un CLIENTE o PROVEEDOR solo ve los
+meses en los que su propio cliente tiene registros.
 
 ## Pantalla principal
 
@@ -201,7 +212,7 @@ que se toque, para no reescribir de golpe lo que ya funciona y esta probado.
 
 ## Mi perfil
 
-Todos los usuarios —incluidos CONTADOR y CLIENTE— tienen un panel propio en
+Todos los usuarios —incluidos CONTADOR, CLIENTE y PROVEEDOR— tienen un panel propio en
 **Mi perfil** (menu superior) donde pueden:
 
 - **Cambiar su contrasena.** Se exige la contrasena actual, minimo 8 caracteres, y no
@@ -211,7 +222,7 @@ Todos los usuarios —incluidos CONTADOR y CLIENTE— tienen un panel propio en
   ubicacion GPS que traen muchas fotos de celular) y garantiza que lo guardado sea
   realmente una imagen. Maximo 5 MB de archivo original.
 
-Es la unica parte donde CONTADOR y CLIENTE pueden escribir, y siempre sobre su propia
+Es la unica parte donde CONTADOR, CLIENTE y PROVEEDOR pueden escribir, y siempre sobre su propia
 cuenta: la ruta no recibe ningun identificador de usuario, se toma de la sesion. Sus
 permisos sobre los procesos no cambian.
 
@@ -463,7 +474,8 @@ render.yaml         Configuracion del despliegue en Render
 - Cuentas desactivables sin necesidad de eliminarlas.
 - No se permite que un administrador se elimine, se desactive o se cambie el rol a si mismo,
   ni que quede el sistema sin administradores activos.
-- El alcance del rol CLIENTE se aplica en la consulta a la base, no en la plantilla.
+- El alcance de los roles CLIENTE y PROVEEDOR se aplica en la consulta a la base, no en
+  la plantilla.
 - Al eliminar un usuario, los procesos que creo se conservan (solo se suelta la referencia
   al autor) y su rastro en el historico permanece.
 

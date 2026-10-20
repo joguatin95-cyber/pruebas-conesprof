@@ -57,7 +57,7 @@ def _construir_consulta(aplicar_filtros=True):
     """
     consulta = select(Proceso)
 
-    # El rol CLIENTE solo puede ver los registros del cliente que tenga asignado.
+    # CLIENTE y PROVEEDOR solo pueden ver los registros del cliente que tengan asignado.
     if current_user.limitado_por_cliente:
         asignado = (current_user.cliente_asignado or "").strip()
         if not asignado:

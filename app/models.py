@@ -11,7 +11,14 @@ from app.extensions import db
 ROL_ADMINISTRADOR = "ADMINISTRADOR"
 ROL_CONTADOR = "CONTADOR"
 ROL_CLIENTE = "CLIENTE"
-ROLES = (ROL_ADMINISTRADOR, ROL_CONTADOR, ROL_CLIENTE)
+ROL_PROVEEDOR = "PROVEEDOR"
+ROLES = (ROL_ADMINISTRADOR, ROL_CONTADOR, ROL_CLIENTE, ROL_PROVEEDOR)
+
+# Roles de solo lectura cuyo alcance se limita al cliente que tengan asignado.
+# Esta tupla es el unico lugar donde se decide: el formulario de usuarios y la
+# consulta de procesos la consultan en vez de comparar contra un rol concreto,
+# de modo que agregar otro rol con el mismo comportamiento es una sola linea.
+ROLES_CON_ALCANCE_POR_CLIENTE = (ROL_CLIENTE, ROL_PROVEEDOR)
 
 # Los estados los define el dominio; aqui solo se reexportan para no romper
 # los import existentes (from app.models import ESTADOS).
@@ -27,7 +34,7 @@ class Usuario(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=True)
     password_hash = db.Column(db.String(255), nullable=False)
     rol = db.Column(db.String(20), nullable=False, default=ROL_CLIENTE)
-    # Solo aplica al rol CLIENTE: limita los registros visibles a ese cliente.
+    # Solo aplica a CLIENTE y PROVEEDOR: limita los registros visibles a ese cliente.
     cliente_asignado = db.Column(db.String(120), nullable=True)
     activo = db.Column(db.Boolean, nullable=False, default=True)
     creado_en = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
@@ -64,8 +71,8 @@ class Usuario(UserMixin, db.Model):
 
     @property
     def limitado_por_cliente(self) -> bool:
-        """El rol CLIENTE solo ve los registros del cliente que tenga asignado."""
-        return self.rol == ROL_CLIENTE
+        """CLIENTE y PROVEEDOR solo ven los registros del cliente que tengan asignado."""
+        return self.rol in ROLES_CON_ALCANCE_POR_CLIENTE
 
     @property
     def sin_cliente_asignado(self) -> bool:
