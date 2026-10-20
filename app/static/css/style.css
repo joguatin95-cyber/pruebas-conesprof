@@ -75,6 +75,16 @@ input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
 .tarjeta.centrada{margin:60px auto;text-align:center}
 .grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .campo{display:flex;flex-direction:column;gap:5px}
+
+/* Campo de contrasena con el boton de mostrarla. El recuadro lo crea
+   js/ver-clave.js; sin JavaScript nada de esto llega a usarse. */
+.clave-caja{position:relative;display:block}
+.clave-caja input{width:100%;box-sizing:border-box;padding-right:74px}
+.ver-clave{position:absolute;top:50%;right:6px;transform:translateY(-50%);
+  background:#fff;border:1px solid var(--borde);border-radius:4px;padding:3px 8px;
+  font-size:12px;font-family:inherit;color:var(--suave);cursor:pointer;line-height:1.4}
+.ver-clave:hover{background:var(--gris);color:var(--texto)}
+.ver-clave[aria-pressed=true]{color:var(--azul);border-color:var(--azul)}
 .campo label{font-size:12px;color:var(--suave);font-weight:600}
 .acciones-form{margin-top:20px;display:flex;gap:10px}
 .check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--texto)}
