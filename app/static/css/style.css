@@ -1,6 +1,9 @@
 :root{
   --azul:#1d4ed8; --azul-osc:#1e3a8a; --gris:#f4f6fa; --borde:#dfe3ec;
   --texto:#1f2430; --suave:#6b7280; --rojo:#dc2626; --verde:#16a34a;
+  /* Fondo de las tarjetas de formulario y borde de las cajas de texto: sin
+     contraste, una caja blanca sobre una tarjeta blanca no se distingue. */
+  --tarjeta:#d6d4e2; --borde-campo:#8683a8;
 }
 *{box-sizing:border-box}
 body{margin:0;font-family:"Segoe UI",Roboto,Arial,sans-serif;background:var(--gris);color:var(--texto);font-size:14px}
@@ -36,8 +39,8 @@ a{color:var(--azul);text-decoration:none}
 .filtros{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#fff;padding:12px;border:1px solid var(--borde);border-radius:8px;margin-bottom:14px}
 .filtros input[type=text]{flex:1;min-width:240px}
 .filtros .mini{font-size:12px;color:var(--suave);display:flex;align-items:center;gap:6px}
-input,select{padding:8px 10px;border:1px solid var(--borde);border-radius:6px;font-size:14px;background:#fff;font-family:inherit}
-input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
+input,select,textarea{padding:8px 10px;border:1px solid var(--borde-campo);border-radius:6px;font-size:14px;background:#fff;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
 
 /* Tabla */
 .tabla-scroll{overflow-x:auto;background:#fff;border:1px solid var(--borde);border-radius:8px}
@@ -71,7 +74,7 @@ input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
 .error{color:var(--rojo);font-size:12px}
 
 /* Formularios y tarjetas */
-.tarjeta{background:#fff;border:1px solid var(--borde);border-radius:8px;padding:24px;max-width:960px}
+.tarjeta{background:var(--tarjeta);border:1px solid var(--borde-campo);border-radius:8px;padding:24px;max-width:960px}
 .tarjeta.centrada{margin:60px auto;text-align:center}
 .grid-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 .campo{display:flex;flex-direction:column;gap:5px}
@@ -87,9 +90,16 @@ input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
 .ver-clave[aria-pressed=true]{color:var(--azul);border-color:var(--azul)}
 
 /* Campo de asignacion que no aplica al rol elegido (lo bloquea js/campos-rol.js). */
-.campo-bloqueado label{color:#9aa3b2}
-.campo-bloqueado input[disabled]{background:#f1f3f7;color:#9aa3b2;font-style:italic;
-  border-color:#e5e9f2;cursor:not-allowed}
+/* Apagado pero visible: sobre la tarjeta lila un gris claro se perderia y
+   pareceria que falta la caja, no que esta deshabilitada. */
+.campo-bloqueado input[disabled]{background:#e9e7f1;color:#7d7a94;font-style:italic;
+  border-color:#aeabc4;cursor:not-allowed}
+
+/* Sobre el fondo de la tarjeta el gris claro de las etiquetas y las notas baja
+   a 3.3 de contraste, por debajo de lo legible. Dentro de la tarjeta se oscurece. */
+.tarjeta .campo label,
+.tarjeta .nota{color:#434a58}
+.tarjeta .campo-bloqueado label{color:#6f6c87}
 .campo label{font-size:12px;color:var(--suave);font-weight:600}
 .acciones-form{margin-top:20px;display:flex;gap:10px}
 .check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--texto)}
