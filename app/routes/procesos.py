@@ -29,6 +29,7 @@ COLUMNAS = [
     ("fecha_inicio", "FECHA INICIO"),
     ("cliente", "CLIENTE"),
     ("subcliente", "SUBCLIENTE"),
+    ("proveedor", "PROVEEDOR"),
     ("tipo_proceso", "TIPO DE PROCESO"),
     ("ciudad", "CIUDAD"),
     ("cedula", "CEDULA"),
@@ -41,6 +42,21 @@ COLUMNAS = [
 ]
 
 CAMPOS_EDITABLES = [campo for campo, _ in COLUMNAS if campo != "id"]
+
+
+# Columnas por las que trabaja el buscador de texto.
+BUSCABLES = ("cliente", "subcliente", "proveedor", "tipo_proceso", "ciudad",
+             "cedula", "nombre", "cargo", "factura", "orden_compra")
+
+
+def columnas_visibles():
+    """Columnas que el usuario conectado debe ver.
+
+    Cada rol con alcance declara en ALCANCES las columnas que se le ocultan. El
+    administrador y el contador las ven todas.
+    """
+    ocultas = set(current_user.columnas_ocultas)
+    return [(campo, titulo) for campo, titulo in COLUMNAS if campo not in ocultas]
 
 
 def _volcar_form(form, proceso):
@@ -57,13 +73,15 @@ def _construir_consulta(aplicar_filtros=True):
     """
     consulta = select(Proceso)
 
-    # CLIENTE y PROVEEDOR solo pueden ver los registros del cliente que tengan asignado.
-    if current_user.limitado_por_cliente:
-        asignado = (current_user.cliente_asignado or "").strip()
+    # CLIENTE y PROVEEDOR ven solo su parte: cada rol se compara contra su propia
+    # columna (cliente o proveedor), que son dimensiones independientes.
+    if current_user.limitado_por_alcance:
+        asignado = current_user.valor_asignado
         if not asignado:
-            # Sin cliente asignado no se muestra ningun registro.
+            # Sin asignacion no se muestra ningun registro.
             return consulta.where(false())
-        consulta = consulta.where(Proceso.cliente.ilike(asignado))
+        columna = getattr(Proceso, current_user.columna_de_alcance)
+        consulta = consulta.where(columna.ilike(asignado))
 
     if not aplicar_filtros:
         return consulta
@@ -71,18 +89,13 @@ def _construir_consulta(aplicar_filtros=True):
     buscar = (request.args.get("q") or "").strip()
     if buscar:
         patron = f"%{buscar}%"
+        # El buscador solo mira las columnas que el usuario puede ver. Si mirara
+        # una columna oculta, su contenido se podria deducir por descarte viendo
+        # que filas devuelve cada busqueda.
+        ocultas = set(current_user.columnas_ocultas)
         consulta = consulta.where(
-            or_(
-                Proceso.cliente.ilike(patron),
-                Proceso.subcliente.ilike(patron),
-                Proceso.tipo_proceso.ilike(patron),
-                Proceso.ciudad.ilike(patron),
-                Proceso.cedula.ilike(patron),
-                Proceso.nombre.ilike(patron),
-                Proceso.cargo.ilike(patron),
-                Proceso.factura.ilike(patron),
-                Proceso.orden_compra.ilike(patron),
-            )
+            or_(*[getattr(Proceso, campo).ilike(patron)
+                  for campo in BUSCABLES if campo not in ocultas])
         )
 
     estado = (request.args.get("estado") or "").strip()
@@ -168,7 +181,7 @@ def listar():
     return render_template(
         "procesos/listar.html",
         paginacion=paginacion,
-        columnas=COLUMNAS,
+        columnas=columnas_visibles(),
         estados=ESTADOS,
         filtros=filtros,
         meses=_meses_disponibles(),
@@ -185,9 +198,10 @@ def exportar():
     """Descarga en CSV el resultado de los filtros activos."""
     salida = io.StringIO()
     escritor = csv.writer(salida, delimiter=";")
-    escritor.writerow([titulo for _, titulo in COLUMNAS])
+    columnas = columnas_visibles()
+    escritor.writerow([titulo for _, titulo in columnas])
     for proceso in db.session.scalars(_construir_consulta()):
-        escritor.writerow([getattr(proceso, campo) or "" for campo, _ in COLUMNAS])
+        escritor.writerow([getattr(proceso, campo) or "" for campo, _ in columnas])
 
     nombre = f"procesos_{datetime.now():%Y%m%d_%H%M}.csv"
     return Response(

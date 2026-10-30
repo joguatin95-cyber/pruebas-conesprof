@@ -12,6 +12,7 @@ ETIQUETAS = {
     "fecha_inicio": "Fecha inicio",
     "cliente": "Cliente",
     "subcliente": "Subcliente",
+    "proveedor": "Proveedor",
     "tipo_proceso": "Tipo de proceso",
     "ciudad": "Ciudad",
     "cedula": "Cedula",
@@ -26,6 +27,7 @@ ETIQUETAS = {
     "rol": "Rol",
     "activo": "Activo",
     "cliente_asignado": "Cliente asignado",
+    "proveedor_asignado": "Proveedor asignado",
     "contrasena": "Contrasena",
 }
 

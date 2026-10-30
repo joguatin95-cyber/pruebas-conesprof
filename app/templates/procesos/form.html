@@ -6,8 +6,8 @@
   <form method="post" novalidate>
     {{ form.hidden_tag() }}
     <div class="grid-form">
-      {% for campo in [form.fecha_inicio, form.cliente, form.subcliente, form.tipo_proceso,
-                       form.ciudad, form.cedula, form.nombre, form.cargo,
+      {% for campo in [form.fecha_inicio, form.cliente, form.subcliente, form.proveedor,
+                       form.tipo_proceso, form.ciudad, form.cedula, form.nombre, form.cargo,
                        form.fecha_finalizacion, form.estado, form.factura, form.orden_compra] %}
         <div class="campo">
           <label>{{ campo.label }}</label>

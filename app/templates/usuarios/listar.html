@@ -9,7 +9,7 @@
 <div class="tabla-scroll">
   <table class="tabla">
     <thead>
-      <tr><th>ID</th><th></th><th>USUARIO</th><th>NOMBRE</th><th>CORREO</th><th>ROL</th><th>CLIENTE ASIGNADO</th><th>ESTADO</th><th class="col-acciones">ACCIONES</th></tr>
+      <tr><th>ID</th><th></th><th>USUARIO</th><th>NOMBRE</th><th>CORREO</th><th>ROL</th><th>CLIENTE ASIGNADO</th><th>PROVEEDOR ASIGNADO</th><th>ESTADO</th><th class="col-acciones">ACCIONES</th></tr>
     </thead>
     <tbody>
       {% for u in usuarios %}
@@ -26,11 +26,18 @@
         <td>{{ u.nombre }}</td>
         <td>{{ u.email or '' }}</td>
         <td><span class="chip chip-{{ u.rol|lower }}">{{ u.rol }}</span></td>
+        {# Cada rol usa una sola de las dos asignaciones; la otra no aplica. #}
+        {% for campo in ['cliente_asignado', 'proveedor_asignado'] %}
         <td>
-          {% if u.sin_cliente_asignado %}
-            <span class="aviso-mini">sin asignar</span>
-          {% else %}{{ u.cliente_asignado or '' }}{% endif %}
+          {% if u.alcance and u.alcance.campo == campo %}
+            {% if u.sin_asignacion %}
+              <span class="aviso-mini">sin asignar</span>
+            {% else %}{{ u[campo] }}{% endif %}
+          {% else %}
+            <span class="suave">No aplica</span>
+          {% endif %}
         </td>
+        {% endfor %}
         <td>{{ 'Activo' if u.activo else 'Inactivo' }}</td>
         <td class="col-acciones">
           <a class="mini-boton" href="{{ url_for('usuarios.editar', usuario_id=u.id) }}">Editar</a>

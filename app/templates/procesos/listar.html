@@ -56,19 +56,19 @@
       {% for p in paginacion.items %}
       <tr>
         <td class="col-numero">{{ primer_numero + loop.index0 }}</td>
-        <td>{{ p.id }}</td>
-        <td>{{ p.fecha_inicio.strftime('%Y-%m-%d') if p.fecha_inicio }}</td>
-        <td>{{ p.cliente }}</td>
-        <td>{{ p.subcliente or '' }}</td>
-        <td>{{ p.tipo_proceso }}</td>
-        <td>{{ p.ciudad or '' }}</td>
-        <td>{{ p.cedula }}</td>
-        <td>{{ p.nombre }}</td>
-        <td>{{ p.cargo or '' }}</td>
-        <td>{{ p.fecha_finalizacion.strftime('%Y-%m-%d') if p.fecha_finalizacion else '' }}</td>
-        <td><span class="estado estado-{{ p.estado|lower|replace(' ', '-') }}">{{ p.estado }}</span></td>
-        <td>{{ p.factura or '' }}</td>
-        <td>{{ p.orden_compra or '' }}</td>
+        {# Las celdas se dibujan a partir de las columnas visibles, que dependen
+           del rol: a un CLIENTE se le oculta la columna CLIENTE y a un PROVEEDOR
+           la columna PROVEEDOR, porque ya saben que todo lo que ven es suyo. #}
+        {% for campo, titulo in columnas %}
+          {% set valor = p[campo] %}
+          {% if campo == 'estado' %}
+            <td><span class="estado estado-{{ valor|lower|replace(' ', '-') }}">{{ valor }}</span></td>
+          {% elif campo in ('fecha_inicio', 'fecha_finalizacion') %}
+            <td>{{ valor.strftime('%Y-%m-%d') if valor else '' }}</td>
+          {% else %}
+            <td>{{ valor if valor is not none else '' }}</td>
+          {% endif %}
+        {% endfor %}
         {% if current_user.es_administrador %}
         <td class="col-acciones">
           <a class="mini-boton" href="{{ url_for('procesos.editar', proceso_id=p.id) }}">Editar</a>
@@ -104,12 +104,12 @@
 </div>
 {% endif %}
 
-{% if current_user.sin_cliente_asignado %}
-<p class="nota aviso">Su usuario no tiene un cliente asignado, por eso no se muestran
-registros. Solicite al administrador que le asigne uno.</p>
-{% elif current_user.limitado_por_cliente %}
+{% if current_user.sin_asignacion %}
+<p class="nota aviso">Su usuario no tiene un {{ current_user.etiqueta_de_asignacion }} asignado, por eso
+no se muestran registros. Solicite al administrador que le asigne uno.</p>
+{% elif current_user.limitado_por_alcance %}
 <p class="nota">Su rol ({{ current_user.rol }}) tiene permisos de solo lectura y muestra
-unicamente los registros de <b>{{ current_user.cliente_asignado }}</b>.</p>
+unicamente los registros de <b>{{ current_user.valor_asignado }}</b>.</p>
 {% elif not current_user.es_administrador %}
 <p class="nota">Su rol ({{ current_user.rol }}) tiene permisos de solo lectura.</p>
 {% endif %}

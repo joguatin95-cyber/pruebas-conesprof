@@ -30,6 +30,7 @@ ALIAS = {
                      "FECHA RADICACION", "FECHA DE RADICACION"],
     "cliente": ["CLIENTE", "EMPRESA"],
     "subcliente": ["SUBCLIENTE", "SUB CLIENTE", "SUCURSAL", "SEDE"],
+    "proveedor": ["PROVEEDOR", "CONTRATISTA", "ALIADO", "TERCERO"],
     "tipo_proceso": ["TIPO DE PROCESO", "TIPO PROCESO", "TIPO", "PROCESO", "SERVICIO"],
     "ciudad": ["CIUDAD", "MUNICIPIO"],
     "cedula": ["CEDULA", "DOCUMENTO", "NO DOCUMENTO", "NUMERO DE DOCUMENTO",

@@ -20,6 +20,7 @@ CAMPOS = (
     "fecha_inicio",
     "cliente",
     "subcliente",
+    "proveedor",
     "tipo_proceso",
     "ciudad",
     "cedula",
@@ -40,6 +41,7 @@ TITULOS = {
     "fecha_inicio": "FECHA INICIO",
     "cliente": "CLIENTE",
     "subcliente": "SUBCLIENTE",
+    "proveedor": "PROVEEDOR",
     "tipo_proceso": "TIPO DE PROCESO",
     "ciudad": "CIUDAD",
     "cedula": "CEDULA",
@@ -56,6 +58,7 @@ TITULOS = {
 LARGOS = {
     "cliente": 120,
     "subcliente": 120,
+    "proveedor": 120,
     "tipo_proceso": 120,
     "ciudad": 80,
     "cedula": 30,
@@ -92,6 +95,7 @@ class FilaProceso:
     cedula: str
     nombre: str
     subcliente: str | None = None
+    proveedor: str | None = None
     ciudad: str | None = None
     cargo: str | None = None
     fecha_finalizacion: date | None = None

@@ -17,6 +17,7 @@ CREATE TABLE procesos (
     fecha_inicio       DATE         NOT NULL,
     cliente            VARCHAR(120) NOT NULL,
     subcliente         VARCHAR(120),
+    proveedor          VARCHAR(120),
     tipo_proceso       VARCHAR(120) NOT NULL,
     ciudad             VARCHAR(80),
     cedula             VARCHAR(30)  NOT NULL,
@@ -32,6 +33,7 @@ CREATE TABLE procesos (
 );
 
 CREATE INDEX ix_procesos_cliente      ON procesos (cliente);
+CREATE INDEX ix_procesos_proveedor    ON procesos (proveedor);
 CREATE INDEX ix_procesos_cedula       ON procesos (cedula);
 CREATE INDEX ix_procesos_nombre       ON procesos (nombre);
 CREATE INDEX ix_procesos_estado       ON procesos (estado);
@@ -57,10 +59,13 @@ CREATE INDEX ix_auditoria_accion     ON auditoria (accion);
 CREATE INDEX ix_auditoria_entidad    ON auditoria (entidad);
 CREATE INDEX ix_auditoria_entidad_id ON auditoria (entidad_id);
 
--- Alcance por cliente de los roles CLIENTE y PROVEEDOR (agregado posteriormente).
+-- Alcance de los roles de solo lectura (agregado posteriormente). CLIENTE se
+-- compara contra procesos.cliente y PROVEEDOR contra procesos.proveedor: son dos
+-- dimensiones independientes, no una jerarquia.
 -- El rol se guarda como texto libre (sin CHECK ni ENUM): agregar un rol nuevo en la
 -- aplicacion no requiere ninguna migracion de la base.
-ALTER TABLE usuarios ADD COLUMN cliente_asignado VARCHAR(120);
+ALTER TABLE usuarios ADD COLUMN cliente_asignado   VARCHAR(120);
+ALTER TABLE usuarios ADD COLUMN proveedor_asignado VARCHAR(120);
 
 -- Foto de perfil (agregado posteriormente). Se guarda en la base y no en disco
 -- porque el almacenamiento de Render es efimero.

@@ -10,35 +10,71 @@ sobre **PostgreSQL**.
 | **ADMINISTRADOR** | Si | Si | Si |
 | **CONTADOR** | Si (todos los clientes) | No | No |
 | **CLIENTE** | Solo su cliente asignado | No | No |
-| **PROVEEDOR** | Solo su cliente asignado | No | No |
+| **PROVEEDOR** | Solo su proveedor asignado | No | No |
 
 El control se aplica en dos capas: la interfaz oculta las acciones no permitidas y cada
 ruta de escritura esta protegida por el decorador `@solo_administrador`, de modo que un
 usuario sin permisos recibe **403** aunque escriba la URL directamente.
 
-`CLIENTE` y `PROVEEDOR` se comportan igual: son dos etiquetas distintas para el mismo
-nivel de acceso (solo lectura, limitado al cliente asignado). Se separan para poder
-distinguir con quien corresponde cada cuenta sin tener que mirar el nombre.
+`CLIENTE` y `PROVEEDOR` tienen el mismo nivel de acceso (solo lectura, limitado a lo
+suyo) pero **miran dimensiones distintas**: el cliente es quien encarga el proceso y el
+proveedor es quien lo ejecuta. Un mismo proveedor atiende a varios clientes, y un mismo
+cliente es atendido por varios proveedores. No hay jerarquia entre ambos.
 
 ### Alcance de los roles CLIENTE y PROVEEDOR
 
-Cada usuario con rol CLIENTE o PROVEEDOR tiene un campo **Cliente asignado** y solo ve los
-registros de ese cliente. El filtro se aplica en la consulta misma, no en la vista, asi que tambien
+Un usuario con rol CLIENTE tiene un campo **Cliente asignado** y solo ve los registros
+cuya columna `cliente` coincida. Un usuario con rol PROVEEDOR tiene un campo
+**Proveedor asignado** y solo ve los registros cuya columna `proveedor` coincida. El filtro se aplica en la consulta misma, no en la vista, asi que tambien
 cubre el buscador, los filtros y la exportacion a CSV: el usuario no puede ver registros
 de otro cliente por mas que cambie los parametros de la URL.
 
-Si una de esas cuentas **no tiene cliente asignado no ve ningun registro** (comportamiento
+Si una de esas cuentas **no tiene su asignacion no ve ningun registro** (comportamiento
 restrictivo por seguridad). La aplicacion avisa de esa situacion al administrador cuando
 crea o edita la cuenta, y la marca como *sin asignar* en el listado de usuarios.
 
 Al cambiar el rol de un usuario a ADMINISTRADOR o CONTADOR, el cliente asignado se limpia
 automaticamente.
 
-Que roles tienen este alcance se declara en un unico sitio, la tupla
-`ROLES_CON_ALCANCE_POR_CLIENTE` de `app/models.py`. El formulario de usuarios y la consulta
-de procesos la consultan en lugar de comparar contra un rol concreto, de modo que agregar
-otro rol equivalente es una sola linea. El rol se guarda como texto (`VARCHAR(20)`, sin
-`CHECK` ni `ENUM`), asi que un rol nuevo no exige migrar la base.
+Que roles tienen alcance, y contra que columna se compara cada uno, se declara en un
+unico sitio: el diccionario `ALCANCES` de `app/models.py`.
+
+```python
+ALCANCES = {
+    ROL_CLIENTE:   {"campo": "cliente_asignado",   "columna": "cliente"},
+    ROL_PROVEEDOR: {"campo": "proveedor_asignado", "columna": "proveedor"},
+}
+```
+
+El formulario de usuarios, la consulta de procesos y las columnas visibles del tablero lo
+consultan en lugar de comparar contra un rol concreto, de modo que agregar otro rol con
+alcance propio es una linea. El rol se guarda como texto (`VARCHAR(20)`, sin `CHECK` ni
+`ENUM`), asi que un rol nuevo no exige migrar la base.
+
+**El formulario de usuarios bloquea el campo que no aplica.** Al elegir CLIENTE se
+deshabilita *Proveedor asignado* y se muestra como *No aplica*, y al reves. Es una ayuda
+visual: el servidor vuelve a decidir que asignacion guardar segun el rol recibido, asi que
+manipular el formulario no cambia nada.
+
+### Columnas visibles segun el rol
+
+El administrador y el contador ven las 14 columnas. Los roles con alcance ven menos:
+
+| Rol | Columnas | No ve |
+|---|---|---|
+| **ADMINISTRADOR** / **CONTADOR** | 14 | — |
+| **PROVEEDOR** | 13 | `PROVEEDOR` |
+| **CLIENTE** | 12 | `CLIENTE` y `PROVEEDOR` |
+
+A cada rol se le oculta su propia columna porque ya sabe que todo lo que ve es suyo, y
+repetirlo en cada fila solo ocupa espacio. Al CLIENTE se le oculta ademas la del proveedor,
+porque quien ejecuta cada proceso no es informacion que le corresponda. Al PROVEEDOR si se
+le muestra el cliente: lo necesita para saber de quien es cada registro.
+
+**Lo que no se ve tampoco se puede buscar.** El buscador de texto solo recorre las columnas
+visibles para el usuario; si recorriera una columna oculta, su contenido se deduciria por
+descarte observando que filas devuelve cada busqueda. La regla vale tambien para la
+exportacion a CSV.
 
 ### Historico de cambios
 
@@ -67,14 +103,14 @@ La tabla imita una hoja de calculo: columna de numero de fila, cuadricula, encab
 queda fijo al desplazarse y filas alternadas.
 
 Los meses se calculan con una consulta agregada en la base (`GROUP BY`), no trayendo los
-procesos a memoria, y respetan el alcance del usuario: un CLIENTE o PROVEEDOR solo ve los
-meses en los que su propio cliente tiene registros.
+procesos a memoria, y respetan el alcance del usuario: solo se ofrecen los meses en los
+que hay registros dentro de su alcance.
 
 ## Pantalla principal
 
 Tabla con las columnas solicitadas:
 
-`ID` · `FECHA INICIO` · `CLIENTE` · `SUBCLIENTE` · `TIPO DE PROCESO` · `CIUDAD` ·
+`ID` · `FECHA INICIO` · `CLIENTE` · `SUBCLIENTE` · `PROVEEDOR` · `TIPO DE PROCESO` · `CIUDAD` ·
 `CEDULA` · `NOMBRE` · `CARGO` · `FECHA FINALIZACION` · `ESTADO` · `FACTURA` ·
 `ORDEN DE COMPRA`
 
@@ -476,6 +512,8 @@ render.yaml         Configuracion del despliegue en Render
   ni que quede el sistema sin administradores activos.
 - El alcance de los roles CLIENTE y PROVEEDOR se aplica en la consulta a la base, no en
   la plantilla.
+- El reparto de la asignacion entre `cliente_asignado` y `proveedor_asignado` lo decide el
+  servidor a partir del rol, no el formulario.
 - Al eliminar un usuario, los procesos que creo se conservan (solo se suelta la referencia
   al autor) y su rastro en el historico permanece.
 

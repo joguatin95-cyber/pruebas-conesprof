@@ -14,11 +14,36 @@ ROL_CLIENTE = "CLIENTE"
 ROL_PROVEEDOR = "PROVEEDOR"
 ROLES = (ROL_ADMINISTRADOR, ROL_CONTADOR, ROL_CLIENTE, ROL_PROVEEDOR)
 
-# Roles de solo lectura cuyo alcance se limita al cliente que tengan asignado.
-# Esta tupla es el unico lugar donde se decide: el formulario de usuarios y la
-# consulta de procesos la consultan en vez de comparar contra un rol concreto,
-# de modo que agregar otro rol con el mismo comportamiento es una sola linea.
-ROLES_CON_ALCANCE_POR_CLIENTE = (ROL_CLIENTE, ROL_PROVEEDOR)
+# Roles de solo lectura que ven una porcion de los procesos. Para cada uno:
+#   campo    -> columna de usuarios donde se guarda a quien representa
+#   columna  -> columna de procesos contra la que se compara
+#   ocultas  -> columnas del tablero que ese rol no debe ver
+# CLIENTE y PROVEEDOR son dimensiones independientes: un proceso pertenece a un
+# cliente y puede haberlo ejecutado un proveedor distinto, sin relacion entre si.
+#
+# Al CLIENTE se le ocultan las dos columnas: la suya porque ya sabe que todo lo
+# que ve es suyo, y la del proveedor porque no le corresponde saber quien ejecuta
+# cada proceso. Al PROVEEDOR solo se le oculta la suya: necesita ver de que
+# cliente es cada registro para poder trabajarlo.
+#
+# Este diccionario es el unico lugar donde se decide el alcance. El formulario de
+# usuarios, la consulta de procesos y las columnas visibles del tablero lo
+# consultan en vez de comparar contra un rol concreto.
+ALCANCES = {
+    ROL_CLIENTE: {
+        "campo": "cliente_asignado",
+        "columna": "cliente",
+        "ocultas": ("cliente", "proveedor"),
+    },
+    ROL_PROVEEDOR: {
+        "campo": "proveedor_asignado",
+        "columna": "proveedor",
+        "ocultas": ("proveedor",),
+    },
+}
+
+# Campos de asignacion, para limpiar los que no corresponden al rol elegido.
+CAMPOS_DE_ASIGNACION = tuple(a["campo"] for a in ALCANCES.values())
 
 # Los estados los define el dominio; aqui solo se reexportan para no romper
 # los import existentes (from app.models import ESTADOS).
@@ -34,8 +59,10 @@ class Usuario(UserMixin, db.Model):
     email = db.Column(db.String(120), unique=True, nullable=True)
     password_hash = db.Column(db.String(255), nullable=False)
     rol = db.Column(db.String(20), nullable=False, default=ROL_CLIENTE)
-    # Solo aplica a CLIENTE y PROVEEDOR: limita los registros visibles a ese cliente.
+    # Solo aplica al rol CLIENTE: limita los registros visibles a ese cliente.
     cliente_asignado = db.Column(db.String(120), nullable=True)
+    # Solo aplica al rol PROVEEDOR: limita los registros visibles a ese proveedor.
+    proveedor_asignado = db.Column(db.String(120), nullable=True)
     activo = db.Column(db.Boolean, nullable=False, default=True)
     creado_en = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
@@ -70,13 +97,49 @@ class Usuario(UserMixin, db.Model):
         return (partes[0][0] + partes[1][0]).upper()
 
     @property
-    def limitado_por_cliente(self) -> bool:
-        """CLIENTE y PROVEEDOR solo ven los registros del cliente que tengan asignado."""
-        return self.rol in ROLES_CON_ALCANCE_POR_CLIENTE
+    def alcance(self):
+        """Definicion del alcance del rol, o None si el usuario ve todos los registros."""
+        return ALCANCES.get(self.rol)
 
     @property
-    def sin_cliente_asignado(self) -> bool:
-        return self.limitado_por_cliente and not (self.cliente_asignado or "").strip()
+    def limitado_por_alcance(self) -> bool:
+        """El usuario solo ve una porcion de los procesos."""
+        return self.rol in ALCANCES
+
+    @property
+    def valor_asignado(self) -> str:
+        """A quien representa el usuario: su cliente o su proveedor, segun el rol."""
+        alcance = self.alcance
+        if not alcance:
+            return ""
+        return (getattr(self, alcance["campo"]) or "").strip()
+
+    @property
+    def columna_de_alcance(self):
+        """Columna de procesos contra la que se filtra, o None si no hay limite."""
+        alcance = self.alcance
+        return alcance["columna"] if alcance else None
+
+    @property
+    def columnas_ocultas(self) -> tuple:
+        """Columnas del tablero que este rol no debe ver.
+
+        No es solo cosmetico: lo que no se muestra tampoco se puede buscar, para
+        que no se deduzca por el buscador lo que la columna no revela.
+        """
+        alcance = self.alcance
+        return alcance["ocultas"] if alcance else ()
+
+    @property
+    def sin_asignacion(self) -> bool:
+        """Rol con alcance pero sin valor asignado: no debe ver ningun registro."""
+        return self.limitado_por_alcance and not self.valor_asignado
+
+    @property
+    def etiqueta_de_asignacion(self) -> str:
+        """Como se llama lo que el usuario tiene asignado, para los mensajes."""
+        alcance = self.alcance
+        return alcance["columna"] if alcance else ""
 
     # Flask-Login bloquea el acceso de las cuentas desactivadas.
     @property
@@ -94,6 +157,8 @@ class Proceso(db.Model):
     fecha_inicio = db.Column(db.Date, nullable=False, index=True)
     cliente = db.Column(db.String(120), nullable=False, index=True)
     subcliente = db.Column(db.String(120), nullable=True)
+    # Quien ejecuta el proceso. Es independiente del cliente que lo encarga.
+    proveedor = db.Column(db.String(120), nullable=True, index=True)
     tipo_proceso = db.Column(db.String(120), nullable=False)
     ciudad = db.Column(db.String(80), nullable=True)
     cedula = db.Column(db.String(30), nullable=False, index=True)

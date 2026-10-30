@@ -28,8 +28,8 @@
     </a>
     <a class="usuario" href="{{ url_for('perfil.ver') }}">{{ current_user.nombre }}</a>
     <span class="chip chip-{{ current_user.rol|lower }}">{{ current_user.rol }}</span>
-    {% if current_user.limitado_por_cliente and current_user.cliente_asignado %}
-      <span class="chip chip-alcance">{{ current_user.cliente_asignado }}</span>
+    {% if current_user.valor_asignado %}
+      <span class="chip chip-alcance">{{ current_user.valor_asignado }}</span>
     {% endif %}
     <a class="salir" href="{{ url_for('auth.logout') }}">Salir</a>
   </div>

@@ -85,6 +85,11 @@ input:focus,select:focus{outline:2px solid #bfdbfe;border-color:var(--azul)}
   font-size:12px;font-family:inherit;color:var(--suave);cursor:pointer;line-height:1.4}
 .ver-clave:hover{background:var(--gris);color:var(--texto)}
 .ver-clave[aria-pressed=true]{color:var(--azul);border-color:var(--azul)}
+
+/* Campo de asignacion que no aplica al rol elegido (lo bloquea js/campos-rol.js). */
+.campo-bloqueado label{color:#9aa3b2}
+.campo-bloqueado input[disabled]{background:#f1f3f7;color:#9aa3b2;font-style:italic;
+  border-color:#e5e9f2;cursor:not-allowed}
 .campo label{font-size:12px;color:var(--suave);font-weight:600}
 .acciones-form{margin-top:20px;display:flex;gap:10px}
 .check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--texto)}

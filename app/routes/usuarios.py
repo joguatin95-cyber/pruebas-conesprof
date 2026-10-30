@@ -8,13 +8,14 @@ from sqlalchemy import select, update
 from app.auditoria import comparar, instantanea, registrar
 from app.extensions import db
 from app.forms import UsuarioEditarForm, UsuarioForm
-from app.models import ROLES_CON_ALCANCE_POR_CLIENTE, Proceso, Usuario
+from app.models import ALCANCES, CAMPOS_DE_ASIGNACION, Proceso, Usuario
 from app.security import solo_administrador
 
 bp = Blueprint("usuarios", __name__, url_prefix="/usuarios")
 
 # Campos del usuario que quedan reflejados en el historico de cambios.
-CAMPOS_AUDITADOS = ["username", "nombre", "email", "rol", "cliente_asignado", "activo"]
+CAMPOS_AUDITADOS = ["username", "nombre", "email", "rol", "cliente_asignado",
+                    "proveedor_asignado", "activo"]
 
 
 def _existe(campo, valor, excluir_id=None):
@@ -24,11 +25,35 @@ def _existe(campo, valor, excluir_id=None):
     return db.session.scalar(consulta) is not None
 
 
-def _clientes_existentes():
-    """Clientes ya registrados, para sugerirlos al asignar un CLIENTE o PROVEEDOR."""
-    return db.session.scalars(
-        select(Proceso.cliente).distinct().order_by(Proceso.cliente)
-    ).all()
+def _valores_existentes(columna):
+    """Valores ya registrados en una columna de procesos, para sugerirlos."""
+    return [v for v in db.session.scalars(
+        select(columna).distinct().order_by(columna)).all() if v]
+
+
+def _sugerencias():
+    """Listas para los desplegables de asignacion del formulario de usuario."""
+    return {
+        "clientes": _valores_existentes(Proceso.cliente),
+        "proveedores": _valores_existentes(Proceso.proveedor),
+    }
+
+
+def _asignaciones(form):
+    """Reparte el valor escrito en el campo que corresponde al rol elegido.
+
+    Solo sobrevive la asignacion del rol: si el usuario es CLIENTE se guarda el
+    cliente y el proveedor queda en nulo, y al reves. Los roles sin alcance
+    (ADMINISTRADOR y CONTADOR) quedan con ambos en nulo. El formulario ya bloquea
+    el campo que no aplica, pero la regla se aplica aqui porque un formulario no
+    es una barrera: lo que llega por HTTP puede traer cualquier cosa.
+    """
+    alcance = ALCANCES.get(form.rol.data)
+    valores = {campo: None for campo in CAMPOS_DE_ASIGNACION}
+    if alcance:
+        campo = alcance["campo"]
+        valores[campo] = (getattr(form, campo).data or "").strip() or None
+    return valores
 
 
 @bp.route("/")
@@ -57,13 +82,8 @@ def crear():
                 nombre=form.nombre.data.strip(),
                 email=email,
                 rol=form.rol.data,
-                # El cliente asignado solo tiene sentido en los roles con alcance.
-                cliente_asignado=(
-                    (form.cliente_asignado.data or "").strip() or None
-                    if form.rol.data in ROLES_CON_ALCANCE_POR_CLIENTE
-                    else None
-                ),
                 activo=form.activo.data,
+                **_asignaciones(form),
             )
             usuario.set_password(form.password.data)
             db.session.add(usuario)
@@ -76,16 +96,17 @@ def crear():
             )
             db.session.commit()
             flash(f"Usuario '{usuario.username}' creado correctamente.", "success")
-            if usuario.sin_cliente_asignado:
+            if usuario.sin_asignacion:
                 flash(
-                    f"El usuario tiene rol {usuario.rol} sin cliente asignado: no vera "
-                    "ningun registro hasta que le asigne uno.",
+                    f"El usuario tiene rol {usuario.rol} sin "
+                    f"{usuario.etiqueta_de_asignacion} asignado: no vera ningun "
+                    "registro hasta que le asigne uno.",
                     "warning",
                 )
             return redirect(url_for("usuarios.listar"))
     return render_template(
         "usuarios/form.html", form=form, titulo="Nuevo usuario",
-        clientes=_clientes_existentes(),
+        **_sugerencias(),
     )
 
 
@@ -110,7 +131,7 @@ def editar(usuario_id):
                 flash("No puede cambiar su propio rol ni desactivar su cuenta.", "warning")
                 return render_template(
                     "usuarios/form.html", form=form, titulo=f"Editar usuario #{usuario.id}",
-                    usuario=usuario, clientes=_clientes_existentes(),
+                    usuario=usuario, **_sugerencias(),
                 )
 
             antes = instantanea(usuario, CAMPOS_AUDITADOS)
@@ -118,11 +139,8 @@ def editar(usuario_id):
             usuario.nombre = form.nombre.data.strip()
             usuario.email = email
             usuario.rol = form.rol.data
-            usuario.cliente_asignado = (
-                (form.cliente_asignado.data or "").strip() or None
-                if form.rol.data in ROLES_CON_ALCANCE_POR_CLIENTE
-                else None
-            )
+            for campo, valor in _asignaciones(form).items():
+                setattr(usuario, campo, valor)
             usuario.activo = form.activo.data
 
             cambios = comparar(antes, instantanea(usuario, CAMPOS_AUDITADOS))
@@ -137,16 +155,17 @@ def editar(usuario_id):
                 )
             db.session.commit()
             flash(f"Usuario '{usuario.username}' actualizado correctamente.", "success")
-            if usuario.sin_cliente_asignado:
+            if usuario.sin_asignacion:
                 flash(
-                    f"El usuario tiene rol {usuario.rol} sin cliente asignado: no vera "
-                    "ningun registro hasta que le asigne uno.",
+                    f"El usuario tiene rol {usuario.rol} sin "
+                    f"{usuario.etiqueta_de_asignacion} asignado: no vera ningun "
+                    "registro hasta que le asigne uno.",
                     "warning",
                 )
             return redirect(url_for("usuarios.listar"))
     return render_template(
         "usuarios/form.html", form=form, titulo=f"Editar usuario #{usuario.id}",
-        usuario=usuario, clientes=_clientes_existentes(),
+        usuario=usuario, **_sugerencias(),
     )
 
 
