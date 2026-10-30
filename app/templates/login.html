@@ -1,8 +1,12 @@
 {% extends "base.html" %}
 {% block titulo %}Ingresar{% endblock %}
+{% block clase_cuerpo %}pantalla-ingreso{% endblock %}
 {% block contenido %}
-<div class="login-caja">
-  <h1>Gestion de Procesos</h1>
+<div class="ingreso">
+  <img class="logo-ingreso" src="{{ url_for('static', filename='img/logo.jpg') }}"
+       alt="Grupo Empresarial Conesprof S.A.S.">
+  <div class="login-caja">
+  <h1>Aplicación Pre Contable<span class="empresa">Grupo Empresarial Conesprof S.A.S.</span></h1>
   <p class="sub">Ingrese sus credenciales para continuar</p>
   <form method="post" novalidate>
     {{ form.hidden_tag() }}
@@ -17,5 +21,6 @@
     <label class="check">{{ form.recordarme() }} Recordarme</label>
     {{ form.submit(class="boton ancho") }}
   </form>
+  </div>
 </div>
 {% endblock %}

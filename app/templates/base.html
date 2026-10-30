@@ -6,7 +6,7 @@
   <title>{% block titulo %}Gestion de Procesos{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body>
+<body class="{% block clase_cuerpo %}{% endblock %}">
 {% if current_user.is_authenticated %}
 <header class="barra">
   <div class="marca">Gestion de Procesos</div>
