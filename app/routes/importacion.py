@@ -217,10 +217,24 @@ def plantilla():
     salida = _io.StringIO()
     escritor = csv.writer(salida, delimiter=";")
     escritor.writerow([TITULOS[c] for c in CAMPOS])
-    escritor.writerow(["15/01/2026", "ALMACENES EXITO", "BODEGA NORTE",
-                       "SELECCION", "MEDELLIN", "1017234567", "JUAN PEREZ",
-                       "AUXILIAR LOGISTICO", "28/01/2026", "FINALIZADO",
-                       "FA-1001", "OC-5510"])
+    # Un valor por cada campo de CAMPOS y en su mismo orden: si el dominio gana
+    # una columna, este ejemplo tiene que crecer con el.
+    ejemplo = {
+        "fecha_inicio": "15/01/2026",
+        "cliente": "ALMACENES EXITO",
+        "subcliente": "BODEGA NORTE",
+        "proveedor": "SERVICIOS INTEGRALES SAS",
+        "tipo_proceso": "SELECCION",
+        "ciudad": "MEDELLIN",
+        "cedula": "1017234567",
+        "nombre": "JUAN PEREZ",
+        "cargo": "AUXILIAR LOGISTICO",
+        "fecha_finalizacion": "28/01/2026",
+        "estado": "FINALIZADO",
+        "factura": "FA-1001",
+        "orden_compra": "OC-5510",
+    }
+    escritor.writerow([ejemplo[c] for c in CAMPOS])
     return Response(
         "﻿" + salida.getvalue(),
         mimetype="text/csv; charset=utf-8",
