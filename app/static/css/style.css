@@ -107,10 +107,17 @@ input:focus,select:focus,textarea:focus{outline:2px solid #bfdbfe;border-color:v
 .check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--texto)}
 
 /* Login */
-/* Solo la pantalla de ingreso: pagina blanca y tarjeta en el azul de la empresa. */
-body.pantalla-ingreso{background:#fff}
+/* Solo la pantalla de ingreso: fondo con la imagen corporativa y tarjeta azul. */
+body.pantalla-ingreso{
+  background:#fff url("../img/fondo-ingreso.jpg") center center / cover no-repeat;
+  min-height:100vh}
+/* El contenido se ajusta al alto de la ventana para que al 100% de zoom no haga
+   falta desplazarse. Si la ventana es muy baja, las consultas de abajo compactan
+   el bloque en lugar de sacar barra de desplazamiento. */
+body.pantalla-ingreso .contenido{min-height:100vh;display:flex;flex-direction:column;
+  padding:20px 16px}
 /* El logo y la tarjeta comparten ancho para que sus bordes queden alineados. */
-.ingreso{max-width:380px;margin:52px auto 40px}
+.ingreso{max-width:380px;margin:0 auto}
 .logo-ingreso{display:block;width:100%;height:auto;border-radius:10px;
   margin:0 0 14px;box-shadow:0 6px 24px rgba(15,23,42,.06)}
 .login-caja{max-width:380px;margin:0 auto;background:var(--azul-conesprof);padding:32px;border:1px solid var(--azul-conesprof);border-radius:10px;box-shadow:0 6px 24px rgba(15,23,42,.18)}
@@ -223,3 +230,28 @@ body.pantalla-ingreso{background:#fff}
 .avanzadas summary:hover{color:var(--azul)}
 .avanzadas .check{margin-top:12px}
 .avanzadas .nota{margin:6px 0 0 24px}
+
+/* --- Pantalla de ingreso: aire arriba segun el alto de la ventana ----------
+   Se reparte hacia abajo solo cuando sobra sitio. En ventanas bajas el bloque
+   se queda arriba, que es lo que evita la barra de desplazamiento. */
+@media (min-height:680px){ body.pantalla-ingreso .contenido{padding-top:40px} }
+@media (min-height:780px){ body.pantalla-ingreso .contenido{padding-top:64px} }
+@media (min-height:900px){ body.pantalla-ingreso .contenido{padding-top:96px} }
+
+/* --- Pantalla de ingreso en ventanas bajas ---------------------------------
+   El bloque se compacta por pasos en lugar de obligar a desplazarse. */
+@media (max-height:700px){
+  .ingreso{max-width:340px}
+  .login-caja{padding:24px}
+  .login-caja .sub{margin-bottom:16px}
+  .login-caja label{margin-top:10px}
+}
+@media (max-height:620px){
+  body.pantalla-ingreso .contenido{padding:12px 16px}
+  .ingreso{max-width:300px}
+  .login-caja{padding:18px}
+  .login-caja h1{font-size:17px}
+  .login-caja h1 .empresa{font-size:13px}
+  .login-caja .sub{margin-bottom:12px;font-size:12px}
+  .logo-ingreso{margin-bottom:10px}
+}
