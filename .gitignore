@@ -14,6 +14,9 @@ instance/
 # Informes generados por la importacion
 *_rechazadas.csv
 
+# Paquete de despliegue, se regenera con 'git archive'
+despliegue.zip
+
 .DS_Store
 
 # Material de otra actividad: se conserva en el disco pero no en el repositorio
