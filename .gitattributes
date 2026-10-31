@@ -1,0 +1,4 @@
+# El Procfile de Elastic Beanstalk se lee en Linux y cada linea debe coincidir
+# con ^[A-Za-z0-9_-]+:\s*[^\s].*$ ; un retorno de carro de Windows al final
+# quedaria pegado al ultimo argumento del comando.
+Procfile text eol=lf
