@@ -55,12 +55,16 @@
   mayusculas, tildes y signos son indiferentes.</p>
 
   <p><b>Columnas obligatorias:</b> FECHA INICIO, CLIENTE, TIPO DE PROCESO, CEDULA, NOMBRE.<br>
-  <b>Opcionales:</b> ID, SUBCLIENTE, CIUDAD, CARGO, FECHA FINALIZACION, ESTADO, FACTURA,
-  ORDEN DE COMPRA.</p>
+  <b>Opcionales:</b> ID, SUBCLIENTE, PROVEEDOR, CIUDAD, CARGO, FECHA FINALIZACION, ESTADO,
+  FACTURA, ORDEN DE COMPRA.</p>
 
   <p>Tambien se reconocen nombres alternativos habituales: <span class="suave">Documento,
   Fecha de Inicio, Tipo Proceso, Nombre Completo, Fecha Fin, Estatus, No Factura,
-  Orden Compra</span>, entre otros.</p>
+  Orden Compra, Contratista</span>, entre otros.</p>
+
+  <p class="nota">La columna <b>PROVEEDOR</b> indica quien ejecuta el proceso, y es
+  independiente del cliente que lo encarga. Si el archivo no la trae, los registros se
+  cargan con el proveedor vacio y ninguna cuenta con rol PROVEEDOR los vera.</p>
 
   <h3 class="titulo-seccion">Se convierte automaticamente</h3>
   <table class="tabla tabla-simple">
