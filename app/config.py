@@ -1,4 +1,5 @@
 import os
+import re
 
 from dotenv import load_dotenv
 
@@ -42,6 +43,11 @@ def normalizar_url(url: str) -> str:
             url += ("&" if "?" in url else "?") + "sslmode=require"
 
     return url
+
+
+def enmascarar(url: str) -> str:
+    """Oculta la contrasena de una cadena de conexion para poder mostrarla."""
+    return re.sub(r"://([^:/@]+):([^@]+)@", r"://\1:***@", url)
 
 
 def en_produccion() -> bool:

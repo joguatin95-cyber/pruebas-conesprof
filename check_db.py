@@ -6,21 +6,16 @@ Nunca imprime la contrasena.
 Uso:  python check_db.py
 """
 
-import re
 import sys
 
 from sqlalchemy import inspect, text
 
 from app import create_app
+from app.config import enmascarar
 from app.extensions import db
 
 TABLAS_ESPERADAS = {"usuarios", "procesos", "auditoria",
                     "importaciones_pendientes"}
-
-
-def enmascarar(url: str) -> str:
-    """Oculta la contrasena de la cadena de conexion antes de mostrarla."""
-    return re.sub(r"://([^:/@]+):([^@]+)@", r"://\1:***@", url)
 
 
 def main():
